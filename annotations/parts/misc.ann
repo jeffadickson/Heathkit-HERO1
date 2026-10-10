@@ -1,0 +1,783 @@
+# misc.ann - Manual mode / Learn mode tail ($EA00-$EFC8) and the speech phrase dictionary ($FA4B-$FFF7)
+# ---- RAM used by Manual (key 4) and Learn (key 7) modes ----
+E  REV_SAVE    $0F28    # Return mode: saved target word ($00,target) of an interrupted arm move
+E  REV_PTR     $0F2A    # Return mode: address of the record being retraced (walks backwards)
+E  REV_PTRL    $0F2B    # low byte of REV_PTR
+E  ADR_VAR     $0F2C    # Learn setup: points at the address variable being keyed in
+E  LRN_PTR     $0F2E    # Learn: record pointer = where the next record goes (a $3A sits there)
+E  LRN_PTRL    $0F2F    # low byte of LRN_PTR
+E  LRN_SHOWN   $0F30    # Learn: LRN_PTR value last shown on the display
+E  LRN_START   $0F32    # Learn: first record after the opening FD (move-all) record
+E  LRN_STARTL  $0F33    # low byte of LRN_START
+E  LRN_END     $0F34    # Learn: last usable address (keyed in as "LA")
+E  LRN_ENDL    $0F35    # low byte of LRN_END
+E  LRN_MODE    $0F36    # Learn sub-mode: 0 record (F), 1 backup (b), 2 return (r)
+E  PREV_ROT    $0F37    # pendant rotary code acted on last ($FF = none); also motor of a playback move
+E  PREV_MOT    $0F38    # pendant motion code acted on last ($FF = none)
+E  ARM_START   $0F39    # arm position when the current arm move began (target in Backup)
+E  PREV_ARM    $0F3A    # PND_ARM on the previous pass
+E  PND_ROT     $0F3B    # pendant rotary switch 0-7 ($C280 bits 6-4)
+E  PND_MOT     $0F3C    # pendant motion switch: 0 clear, 1 left, 2 right
+E  PND_ARM     $0F3D    # pendant function switch: $80 ARM, $00 BODY
+E  DRV_ON      $0F3E    # 1 = a pendant drive leg is running
+E  STR_ON      $0F3F    # 1 = a pendant steering move is running
+E  ARM_ON      $0F40    # 1 = a pendant arm move is running (to be recorded when it ends)
+E  PB_WAIT     $0F41    # Backup/Return: 1 = waiting for an arm move to finish
+E  PB_PAUSED   $0F42    # Backup/Return: 1 = arm move was cut short by releasing the trigger
+E  PB_TIMER    $0F43    # Backup/Return: dwell countdown between records ($0400 passes)
+E  PB_TIMERL   $0F44    # low byte of PB_TIMER (bit 7 blinks the mode letter)
+E  PND_TRIG    $0F45    # pendant trigger: 1 = pulled
+E  DRV_OP      $0F46    # opcode for a drive record: $C3 (wait) or $CC (continue, steering also moving)
+E  REC_OP      $0F47    # record under construction: opcode
+E  REC_DIR     $0F48    # record: direction bit (4) + distance bits 9-8; REC_DIR:REC_POS is one word
+E  REC_POS     $0F49    # record: position or distance low byte
+E  REC_MOTOR   $0F4A    # record: motor select bits (mmm00000)
+E  REC_SPEED   $0F4B    # record: speed bits (ss000)
+E  SHOW_LAST   $0F4C    # Manual readout: value last shown ($FFFF forces a redraw)
+E  SHOW_LASTL  $0F4D    # low byte of SHOW_LAST (arm position last shown)
+E  MODE_CHAR   $0F4E    # Learn: segment pattern of the mode letter ($C7 F., $9F b., $85 r., 0 blink)
+E  MODE_SHOWN  $0F4F    # Learn: mode letter now on the display
+E  TMP_PTR     $0F50    # scratch word for building pointers / motor words
+E  TMP_PTRL    $0F51    # low byte of TMP_PTR
+
+C  EA02 tail of manual-mode setup at $E9E3: no mode letter shown yet
+B  EA06 $EA06-$EFC8: Manual (key 4) and Learn (key 7) mode helpers, driven by the teaching pendant on $C280.
+B  EA06 Most of it never runs in the recorded sessions (the stock emulator holds the pendant idle); every
+B  EA06 instruction in this block was reached with a scratch emulator copy that models the pendant byte,
+B  EA06 by driving Manual mode, Learn record/backup/return, a long drive, an over-full program and bad opcodes.
+
+# ---------------------------------------------------------------
+L  EA06 LRN_SHOWPTR
+H  EA06
+;---------------------------------------------------------------
+; LRN_SHOWPTR - show the Learn mode letter and record pointer
+;
+; Redraws digits 1-5 ("F.0508", "b.0511", "r.0514") only when the record
+; pointer or the mode letter has changed since the last call, so the display
+; does not flicker in the polling loop.
+;
+; In:        LRN_PTR, MODE_CHAR
+; Out:       LRN_SHOWN = LRN_PTR, MODE_SHOWN = MODE_CHAR       (contract)
+; Memory:    writes DIGADD ($0FF2), display latches
+;---------------------------------------------------------------
+C  EA0C pointer unchanged since last shown?
+C  EA11 ... and the mode letter too?
+C  EA14 yes: nothing to do
+C  EA16 digit 1 (second from left)
+C  EA1F OUTCH: mode letter (or blank while blinking)
+C  EA25 OUTBYT: pointer high byte
+C  EA2B OUTBYT: pointer low byte
+
+# ---------------------------------------------------------------
+L  EA35 MAN_SHOW
+H  EA35
+;---------------------------------------------------------------
+; MAN_SHOW - Manual mode position readout
+;
+; BODY: digits 2-5 show the drive distance counter ($0007/$0008) in hex.
+; ARM: digits 2-3 blank, 4-5 show the position byte of the motor picked by the
+; rotary switch (blank at N). Redraws only on change; a change of the
+; ARM/BODY switch forces a full redraw. (Emulator: ARM with the rotary at Head shows "4.   61".)
+;
+; In:        PND_ARM, PREV_ARM, PND_ROT, SHOW_LAST, MODE_SHOWN
+; Out:       SHOW_LAST updated                                  (contract)
+; Memory:    writes DIGADD ($0FF2), display latches; reads $0000-$0008
+;---------------------------------------------------------------
+C  EA38 function switch moved since last pass?
+L  EA3D MAN_SHOWNOW
+H  EA3D
+;---------------------------------------------------------------
+; MAN_SHOWNOW - MAN_SHOW entry that always redraws
+;
+; Learn mode jumps in here while key 4 is held to show the live position.
+;
+; In:        B = PND_ARM ($80 arm, 0 body)
+; Memory:    as MAN_SHOW
+;---------------------------------------------------------------
+C  EA3D $FFFF never matches a real value: force a redraw
+C  EA43 digit 1
+C  EA4C OUTCH: mode letter (blank in Manual mode)
+C  EA4F B = PND_ARM: Z set = BODY
+C  EA52 blank pattern
+C  EA53 OUTCH: digit 2 blank
+C  EA56 OUTCH: digit 3 blank
+C  EA5E rotary not at N: show that motor
+C  EA60 OUTCH: digit 4 blank
+C  EA63 OUTCH: digit 5 blank
+C  EA66 force a redraw when a motor is selected again
+C  EA6F MOTPOS: A = current position of the selected motor
+C  EA72 same as shown? (low byte of SHOW_LAST)
+C  EA7A OUTBYT: position, digits 4-5
+C  EA7F BODY: drive distance counter $0007/$0008
+C  EA8B OUTBYT: distance high
+C  EA90 OUTBYT: distance low
+
+# ---------------------------------------------------------------
+L  EA94 RD_PENDANT
+H  EA94
+;---------------------------------------------------------------
+; RD_PENDANT - read and debounce the teaching pendant
+;
+; Reads $C280 until it returns the same value 127 times running, then splits
+; it: bit 0 trigger, bits 6-4 rotary (N=0, wrist pivot=1, wrist rotate=2,
+; gripper=3, arm pivot (shoulder)=5, extend=6, head=7), bits 3-2 motion (active
+; low: bit 3 low = RIGHT, bit 2 low = LEFT per the manual's pendant chart),
+; bit 7 function (1 = ARM).
+;
+; In:        MOTB ($C280) pendant inputs
+; Out:       PND_TRIG 0/1, PND_ROT 0-7, PND_MOT 0 clear/1 left/2 right,
+;            PND_ARM $80 ARM or 0 BODY                          (contract)
+; Memory:    writes PND_TRIG, PND_ROT, PND_MOT, PND_ARM
+;---------------------------------------------------------------
+C  EA97 need 127 identical reads
+C  EA99 changed? start over
+C  EAA2 bit 0: trigger (1 = pulled)
+C  EAA8 bits 6-4: rotary switch
+C  EAB2 bits 3-2 down to 1-0
+C  EAB4 active low: invert
+C  EAB5 1 = LEFT (bit 2 low), 2 = RIGHT (bit 3 low)
+C  EABA bit 7: function switch ARM
+
+# ---------------------------------------------------------------
+L  EAC0 SET_DRVOP
+H  EAC0
+;---------------------------------------------------------------
+; SET_DRVOP - choose the opcode for the next drive record
+;
+; A drive leg recorded while the steering is also moving is written as
+; $CC (move, continue) so that on playback the steering record that follows
+; runs at the same time; otherwise $C3 (move, wait).
+;
+; In:        DRV_ON, STR_ON
+; Out:       DRV_OP = $CC or $C3                                (contract)
+;---------------------------------------------------------------
+
+# ---------------------------------------------------------------
+L  EAD2 REC_FLUSH
+H  EAD2
+;---------------------------------------------------------------
+; REC_FLUSH - end every pendant motion in progress and record it
+;
+; Drive: stop it and write C3/CC (drive, speed/direction from the rotary,
+; distance travelled so far). Steering: abort it and write "C3 E8 pp", an
+; absolute steering move to where it stopped. Arm: abort it and write
+; "D3 m8 dd", a slow relative move from ARM_START to where it stopped.
+; (Emulator: extend moved $4C->$55 recorded as D3 28 09.)
+;
+; In:        DRV_ON, STR_ON, ARM_ON, PREV_ROT, ARM_START, DRV_OP
+; Out:       the three flags cleared; records appended at LRN_PTR (contract)
+; Memory:    writes REC_xxx, LRN_PTR, the program area
+;---------------------------------------------------------------
+C  EAD2 drive leg running?
+C  EAD7 distance counted so far
+C  EADC DRV_ABORT: stop the drive motor
+C  EADF A = rotary code the leg was started with
+C  EAE5 DRV_FIELDS: fill REC_xxx for a drive move of X counts
+C  EAE8 REC_MOVE: append the record
+C  EAEE steering move running?
+C  EAF3 abort steering and wait until it has stopped
+C  EAF6 steering position now
+C  EAFE speed bits 01 (slow)
+C  EB03 motor 7 = steering
+C  EB08 C3: absolute move, wait
+C  EB0D REC_MOVE: append "C3 E8 pp"
+C  EB13 arm move running?
+C  EB18 abort the arm channel and wait until it has stopped
+C  EB1B motor that was moving
+C  EB1E MOTPOS: A = its position now
+C  EB24 moved below where it started?
+C  EB26 distance = now - start, direction bit 0 (increase)
+C  EB31 distance = start - now
+C  EB38 direction bit set (decrease)
+C  EB3D speed bits 01 (slow)
+C  EB42 D3: relative move, wait
+C  EB47 REC_MOVE: append "D3 m8 dd"
+
+# ---------------------------------------------------------------
+L  EB4E REC_IDLE
+H  EB4E
+;---------------------------------------------------------------
+; REC_IDLE - record a pause when the operator lets go
+;
+; In Record mode with the trigger released, BODY selected and the rotary at N,
+; appends "8F 00 20" (PAUSE 2 s) once (not if the last record is already a
+; pause or the program is empty), then actually waits about 2 s so that live
+; operation keeps step with what playback will do.
+;
+; In:        PND_ARM, PND_ROT, LRN_PTR, LRN_START
+; Memory:    may append 4 bytes at LRN_PTR
+;---------------------------------------------------------------
+C  EB51 ARM selected: no pause
+C  EB56 rotary not at N: no pause
+C  EB5E nothing recorded yet
+C  EB60 back up to the last record
+C  EB65 already a PAUSE?
+C  EB69 REC_PAUSE: append 8F 00 20
+C  EB6C 31 x 1/16 s
+C  EB6F wait loop inside the SLEEP/PAUSE handler (counts $0EFC in steps of 64 ticks)
+
+# ---------------------------------------------------------------
+L  EB73 LRN_KEY
+H  EB73
+;---------------------------------------------------------------
+; LRN_KEY - act on a keypad key in Learn mode
+;
+; 4 = show the live position (BODY: distance, ARM: motor position) while held.
+; F = back to Record (forward) mode; if a Backup/Return arm move is under way,
+;     its partial movement is recorded first.
+; B = Backup: step back through the program undoing arm moves and erasing them.
+; 7 = Return: retrace the program backwards to the starting pose, recording
+;     the return moves so the program ends where it began.
+; Other keys are ignored. Waits for the key to be released.
+;
+; In:        A = key code 0-F
+; Memory:    LRN_MODE, MODE_CHAR, LRN_PTR, REV_PTR, PB_xxx
+;---------------------------------------------------------------
+C  EB74 key 4?
+C  EB78 forces LRN_SHOWPTR to redraw afterwards
+C  EB7E MAN_SHOWNOW: live readout while the key is held
+C  EB81 wait until the key has been released
+C  EB85 key F: Record
+C  EB89 a playback arm move in progress?
+C  EB8E yes: treat it as a pendant arm move ...
+C  EB93 REC_FLUSH: ... and record how far it got (overwrites the record being undone)
+C  EB96 mode 0 ...
+C  EB97 ... letter "F."
+C  EB99 SET_LMODE
+C  EB9E key B: Backup
+C  EBA8 PTR_BACK3: step back onto the last record (to Executive if none)
+C  EBB1 mode 1 ...
+C  EBB3 ... letter "b."
+C  EBB5 SET_LMODE
+C  EBBA key 7: Return
+C  EBC4 PTR_BACK3: last record (to Executive if none)
+C  EBC7 REV_PTR walks backwards; LRN_PTR keeps appending
+C  EBCD mode 2 ...
+C  EBCF ... letter "r."
+C  EBD1 SET_LMODE
+
+# ---------------------------------------------------------------
+L  EBD5 PB_BACKUP
+H  EBD5
+;---------------------------------------------------------------
+; PB_BACKUP - one pass of Backup mode (trigger held)
+;
+; Takes the record at LRN_PTR. A D3 arm move is undone by an absolute move back
+; to where it started; C3/CC (drive, steering) and 8F records are stepped over
+; without moving anything. Then dwells PB_TIMER passes with "b." blinking and
+; moves LRN_PTR back one record, which erases it. Below LRN_START it returns to
+; the Executive. A move cut short by releasing the trigger restarts here.
+; Any other opcode (e.g. one keyed in by hand) also exits to the Executive.
+;
+; In:        LRN_PTR, PB_TIMER, PB_WAIT, PB_PAUSED
+; Memory:    REC_xxx, PREV_ROT, ARM_START, MODE_CHAR, LRN_PTR
+;---------------------------------------------------------------
+C  EBD5 resuming after the trigger was released mid-move?
+C  EBDA MOT_GO: restart the same move (REC_xxx still hold it)
+C  EBE0 return
+C  EBE3 dwelling or waiting?
+C  EBE8 fetch the record at LRN_PTR
+C  EBED B = byte 1 (direction bit 2)
+C  EBEE motor bits
+C  EBF3 distance
+C  EC00 arm relative move?
+C  EC07 MOT2ROT: motor bits -> rotary code
+C  EC0A remember which motor
+C  EC0D MOTPOS: A = its position now
+C  EC10 recorded as a decrease?
+C  EC14 undo a decrease: add the distance back
+C  EC19 undo an increase: subtract it
+C  EC1C target = where the move started
+C  EC27 MOT_GO: start the absolute move back, without waiting
+C  EC2A wait for it before dwelling
+C  EC31 drive, steering and pause records are skipped
+C  EC3D unknown opcode: back to the Executive
+C  EC40 dwell count
+C  EC48 waiting for the arm?
+C  EC4D arm channel still busy ($0B bit 2)?
+C  EC58 count down the dwell
+C  EC5F blink: blank while bit 7 of the count is set
+C  EC69 "b."
+C  EC6E dwell over?
+C  EC79 PTR_BACK3: drop this record (to Executive past the start)
+C  EC82 (also the JMP target used as a shared return)
+
+# ---------------------------------------------------------------
+L  EC83 PB_RETURN
+H  EC83
+;---------------------------------------------------------------
+; PB_RETURN - one pass of Return mode (trigger held)
+;
+; Walks REV_PTR backwards through the program. Each D3 arm move is undone by an
+; absolute move to where it started; when it completes, the undo is recorded
+; at LRN_PTR as a new D3 (via REC_FLUSH), so after a full Return the program
+; ends in its starting pose. Drive, steering and pause records are stepped over
+; and NOT retraced. When REV_PTR passes LRN_START it returns to the Executive.
+; (Emulator: "D3 28 09 D3 48 09" gained "D3 4C 09 D3 2C 09".)
+; If the trigger was released mid-move, the partial record REC_FLUSH wrote is
+; dropped and the move is restarted from REV_SAVE.
+;
+; In:        REV_PTR, LRN_PTR, PB_TIMER, PB_WAIT, PB_PAUSED, REV_SAVE
+; Memory:    REC_xxx, PREV_ROT, ARM_START, ARM_ON, MODE_CHAR, LRN_PTR, REV_PTR
+;---------------------------------------------------------------
+C  EC83 resuming after the trigger was released mid-move?
+C  EC8E PTR_BACK3: drop the partial record written at the release
+C  EC97 target word saved when the move began
+C  EC9D MOT_GO: restart the move
+C  ECA3 record it again when it finishes
+C  ECA8 return
+C  ECAB dwelling or waiting?
+C  ECB0 fetch the record at REV_PTR
+C  ECB5 B = byte 1 (direction bit 2)
+C  ECC8 arm relative move?
+C  ECCF MOT2ROT: motor bits -> rotary code
+C  ECD5 MOTPOS: A = its position now
+C  ECD8 start of the undo = start of what gets recorded
+C  ECDB recorded as a decrease?
+C  ECDF undo a decrease
+C  ECE4 undo an increase
+C  ECEA save ($00,target) in case of a pause
+C  ECF5 MOT_GO: start the absolute move, without waiting
+C  ECFD ARM_ON: record it when it ends
+C  ED02 drive, steering and pause records are skipped
+C  ED0E unknown opcode: back to the Executive
+C  ED11 dwell count
+C  ED19 waiting for the arm?
+C  ED1E arm channel still busy ($0B bit 2)?
+C  ED24 REC_FLUSH: record the completed return move
+C  ED2C count down the dwell
+C  ED33 blink: blank while bit 7 of the count is set
+C  ED3D "r."
+C  ED4D PTR_BACK3: previous record (to Executive past the start)
+C  ED56 (also the JMP target used as a shared return)
+
+# ---------------------------------------------------------------
+L  ED57 DRV_RELEG
+H  ED57
+;---------------------------------------------------------------
+; DRV_RELEG - start another drive leg when one runs out
+;
+; A pendant drive leg is started for the maximum distance ($3FF counts). If the
+; drive has gone idle while the trigger is still held, the leg ran its full
+; length: start an identical one and report it so the caller records a full
+; "CC" leg. (Emulator: a long drive recorded "CC 1B FF CC 1B FF ...".)
+;
+; In:        PND_ROT, $0B busy bit 0 (drive)
+; Out:       C set = new leg started, REC_xxx describe it (distance $3FF);
+;            C clear = drive still running                      (contract)
+; Memory:    writes REC_xxx, starts the drive motor
+;---------------------------------------------------------------
+C  ED59 drive still busy?
+C  ED60 full leg
+C  ED63 DRV_FIELDS: fill REC_xxx for a drive move
+C  ED66 MOT_GO: start it
+C  ED69 C = 1: record a leg
+
+# ---------------------------------------------------------------
+L  ED6D MAN_BODY
+H  ED6D
+;---------------------------------------------------------------
+; MAN_BODY - pendant BODY control (trigger held)
+;
+; Rotary 1-3 drive forward slow/medium/fast, 5-7 reverse slow/medium/fast, N no
+; drive; the leg is started once for $3FF counts. Motion LEFT steers to the
+; left stop ($00), RIGHT to the right stop ($93), clear returns the wheel to
+; centre ($49); each as a slow absolute steering move. Used by Manual mode and
+; Learn Record mode.
+;
+; In:        PND_ROT, PND_MOT, DRV_ON, STR_ON, steering position $0006
+; Out:       PREV_ROT, PREV_MOT updated                         (contract)
+; Memory:    DRV_ON, STR_ON, REC_xxx; starts drive/steering motors
+;---------------------------------------------------------------
+C  ED6D drive already running?
+C  ED75 rotary at N: no drive
+C  ED79 maximum leg
+C  ED7C DRV_FIELDS: speed/direction from the rotary code
+C  ED84 MOT_GO: start the drive leg
+C  ED87 steering already moving?
+C  ED8C current steering position
+C  ED94 motion switch clear?
+C  ED98 LEFT?
+C  ED9C (A is 0 already, or becomes 0: left stop)
+C  EDA2 RIGHT: right stop $93
+C  EDAA clear: centre $49
+C  EDB0 already there?
+C  EDBA C3 absolute move, wait
+C  EDBF motor 7 = steering
+C  EDC4 speed bits 01 (slow)
+C  EDC9 MOT_GO: start the steering move
+
+# ---------------------------------------------------------------
+L  EDDE MAN_ARM
+H  EDDE
+;---------------------------------------------------------------
+; MAN_ARM - pendant ARM control (trigger held)
+;
+; When the rotary or motion switch has changed and both select something,
+; starts a slow absolute move of the chosen arm/head motor toward its end of
+; travel in the direction of the motion switch (ARM_LIMIT table), noting the
+; start position in ARM_START. The caller aborts the move (and records it in
+; Learn) when a switch changes again or the trigger is released.
+;
+; In:        PND_ROT, PND_MOT, PREV_ROT, PREV_MOT
+; Out:       PREV_ROT, PREV_MOT updated                         (contract)
+; Memory:    ARM_ON, ARM_START, REC_xxx; starts an arm motor
+;---------------------------------------------------------------
+C  EDE4 anything changed?
+C  EDEE rotary at N: nothing to move
+C  EDF2 motion switch clear: nothing to move
+C  EDF6 ARM_LIMIT: REC_POS = end of travel in that direction
+C  EDFC MOTPOS: A = position now
+C  EDFF already at the end?
+C  EE04 remember where the move began
+C  EE0A ROT2MOT: REC_MOTOR = motor bits
+C  EE0D speed bits 01 (slow)
+C  EE12 MOT_GO: start the absolute move without waiting
+C  EE15 ARM_ON
+
+# ---------------------------------------------------------------
+L  EE27 DRV_ABORT
+H  EE27
+;---------------------------------------------------------------
+; DRV_ABORT - ask the interrupt code to stop the drive motor
+;
+; If the drive is busy, clears its busy bit, sets the target speed to $3F
+; (stopped) and raises the drive abort request bit in $0C, all with interrupts
+; masked (SEI ... CLI window).
+;
+; In:        $0B busy bits
+; Memory:    $0B bit 0, $0C bit 0, $0F01 (drive target speed)
+;---------------------------------------------------------------
+C  EE2D interrupts masked from here ...
+C  EE31 drive no longer busy
+C  EE35 target speed $3F = stopped
+C  EE3C request the abort
+C  EE40 ... to here
+
+# ---------------------------------------------------------------
+L  EE42 DRV_GATE
+H  EE42
+;---------------------------------------------------------------
+; DRV_GATE - cut the drive unless the pendant is driving it
+;
+; The drive may run only while the trigger is held with BODY selected and the
+; rotary off N; otherwise both current and target drive speed ($0F00/$0F01)
+; are forced to $3F (stopped) at once, without the ramp.
+;
+; In:        PND_TRIG, PND_ARM, PND_ROT
+; Memory:    may write $0F00, $0F01
+;---------------------------------------------------------------
+C  EE4F trigger, BODY, rotary off N: leave it running
+C  EE51 stop: speed $3F
+
+# ---------------------------------------------------------------
+L  EE5A SET_LMODE
+H  EE5A
+;---------------------------------------------------------------
+; SET_LMODE - select a Learn sub-mode
+;
+; In:        A = mode (0 record, 1 backup, 2 return), B = its letter pattern
+; Out:       LRN_MODE, MODE_CHAR set; PB_TIMER, PB_WAIT, PB_PAUSED cleared
+;---------------------------------------------------------------
+
+# ---------------------------------------------------------------
+L  EE6D ROT2MOT
+H  EE6D
+;---------------------------------------------------------------
+; ROT2MOT - pendant rotary code -> motor select bits
+;
+; Searches ROTTAB for the rotary code. There is no end marker: code 4 (which
+; the pendant's diode encoder never produces) would run the search on into the
+; code that follows.
+;
+; In:        A = rotary code (0-3, 5-7)
+; Out:       A = REC_MOTOR = motor bits (mmm00000)              (contract)
+; Memory:    writes REC_MOTOR
+;---------------------------------------------------------------
+L  EE7E MOT2ROT
+H  EE7E
+;---------------------------------------------------------------
+; MOT2ROT - motor select bits -> pendant rotary code
+;
+; Reverse search of ROTTAB, used to replay D3 records. Unbounded like ROT2MOT:
+; a D3 record for the drive ($00 -> N) is harmless, one for steering ($E0)
+; would scan past the table (only possible in a hand-edited program).
+;
+; In:        A = motor bits (mmm00000)
+; Out:       A = rotary code                                    (contract)
+;---------------------------------------------------------------
+L  EE8C ROTTAB
+R  EE8C EE99 fcb 2
+B  EE8C rotary code, motor bits: head, extend, shoulder, wrist pivot, wrist rotate, gripper, N
+C  EE8C head=7 ext=6 shoulder=5 pivot=1 rotate=2 grip=3 N=0
+
+# ---------------------------------------------------------------
+L  EE9A MOTPOS
+H  EE9A
+;---------------------------------------------------------------
+; MOTPOS - current position of the motor picked by a rotary code
+;
+; Converts the rotary code to a motor number (ROT2MOT, then rotate the top
+; three bits down) and reads that motor's byte in the position table
+; $0000-$0005 (motor 1 extend ... 6 head).
+;
+; In:        A = rotary code, not 0
+; Out:       A = position byte, X = its address ($0000-$0005)  (contract)
+; Memory:    writes REC_MOTOR, TMP_PTR
+;---------------------------------------------------------------
+C  EE9A ROT2MOT: A = mmm00000
+C  EE9C four 9-bit rotates bring mmm down to bits 2-0 (C is clear after the CMPA match)
+C  EEA0 motor 1-6 -> table offset 0-5
+C  EEA7 X = $00xx
+C  EEAA position byte
+
+# ---------------------------------------------------------------
+L  EEB3 ARM_LIMIT
+H  EEB3
+;---------------------------------------------------------------
+; ARM_LIMIT - end-of-travel target for a pendant arm move
+;
+; In:        A = rotary code (1-3, 5-7), B = motion (1 left, 2 right)
+; Out:       REC_POS = target position, REC_DIR = 0             (contract)
+;---------------------------------------------------------------
+C  EEBF step to the LEFT (1) or RIGHT (2) column
+L  EECC LIMTAB
+R  EECC EEDD fcb 3
+B  EECC rotary code, LEFT target, RIGHT target. Wrist pivot and gripper run the other way;
+B  EECC the head target $C9 lies past the $C2 home-table limit (the switch is released first).
+C  EECC head, extend, shoulder, pivot, rotate, gripper
+
+# ---------------------------------------------------------------
+L  EEDE DRV_FIELDS
+H  EEDE
+;---------------------------------------------------------------
+; DRV_FIELDS - fill the record fields for a drive move
+;
+; Rotary codes double as drive settings: bits 1-0 = speed (1 slow, 2 medium,
+; 3 fast), bit 2 = reverse.
+;
+; In:        A = rotary code, X = distance in encoder counts (10 bits)
+; Out:       REC_MOTOR = 0 (drive), REC_SPEED = speed<<3,
+;            REC_DIR:REC_POS = direction bit | distance, REC_OP = DRV_OP (contract)
+; Memory:    writes TMP_PTR
+;---------------------------------------------------------------
+C  EEDE motor 0 = drive
+C  EEE4 speed 1-3 ...
+C  EEE6 ... into bits 4-3
+C  EEEC reverse bit
+C  EEF1 distance bits 9-8
+C  EEF6 merge with the direction bit
+C  EF00 C3 or CC (SET_DRVOP)
+
+# ---------------------------------------------------------------
+L  EF07 REC_MOVE
+H  EF07
+;---------------------------------------------------------------
+; REC_MOVE - append a 3-byte motor record to the Learn program
+;
+; Writes REC_OP and the motor word at LRN_PTR, advances LRN_PTR by 3 and puts
+; a $3A (RETURN TO EXECUTIVE) after it, so the program is always runnable.
+;
+; In:        REC_OP, REC_MOTOR, REC_SPEED, REC_DIR, REC_POS, LRN_PTR
+; Out:       LRN_PTR += 3                                       (contract)
+; Memory:    writes 4 bytes of the program area
+;---------------------------------------------------------------
+C  EF09 ROOM_CHK: 4 bytes free? (hangs on "FULL" otherwise)
+C  EF11 PUT_WORD: motor word bytes
+C  EF18 terminator (not counted in LRN_PTR)
+
+# ---------------------------------------------------------------
+L  EF1D REC_PAUSE
+H  EF1D
+;---------------------------------------------------------------
+; REC_PAUSE - append "8F 00 20" (PAUSE 2 s) to the Learn program
+;
+; In:        LRN_PTR
+; Out:       LRN_PTR += 3, $3A written after it                 (contract)
+;---------------------------------------------------------------
+C  EF1F ROOM_CHK: 4 bytes free?
+C  EF21 PAUSE ...
+C  EF27 ... 32/16 s
+C  EF2B terminator
+
+# ---------------------------------------------------------------
+L  EF36 PUT_WORD
+H  EF36
+;---------------------------------------------------------------
+; PUT_WORD - store the motor word built in REC_xxx at X
+;
+; In:        X = destination
+; Out:       0,X = REC_MOTOR+REC_SPEED+REC_DIR, 1,X = REC_POS  (contract)
+;---------------------------------------------------------------
+
+# ---------------------------------------------------------------
+L  EF47 MOT_GO
+H  EF47
+;---------------------------------------------------------------
+; MOT_GO - start the motor move described by REC_xxx, no wait
+;
+; Builds the motor word in $0F1E/$0F1F with "no wait" in $0F20 and calls the
+; Robot Interpreter's absolute motor-start code.
+;
+; In:        REC_MOTOR, REC_SPEED, REC_DIR, REC_POS
+; Memory:    writes $0F1E-$0F20
+;---------------------------------------------------------------
+C  EF4A PUT_WORD: word into $0F1E/$0F1F
+C  EF4C 0 = do not wait for completion
+C  EF4F start the motor from the word at $0F1E
+
+# ---------------------------------------------------------------
+L  EF53 ROOM_CHK
+H  EF53
+;---------------------------------------------------------------
+; ROOM_CHK - make sure the Learn program has room
+;
+; If LRN_PTR + A passes LRN_END, stops the drive, steering and arm, shows
+; "FULL" and hangs at FULL_HANG until RESET (confirmed in the emulator with a
+; 16-byte program area).
+;
+; In:        A = bytes needed
+; Out:       X = LRN_PTR                                        (contract)
+;---------------------------------------------------------------
+C  EF54 B:A = LRN_PTR + A
+C  EF5A compare with LRN_END (high, then low)
+C  EF62 fits
+C  EF64 DRV_ABORT: stop the drive
+C  EF67 abort steering and wait
+C  EF6A abort the arm and wait
+C  EF6D CLRDIS: clear the display
+C  EF70 OUTSTR: inline string follows
+L  EF78 FULL_HANG
+C  EF78 hang here; only RESET leaves
+
+# ---------------------------------------------------------------
+L  EF7E REC_POSALL
+H  EF7E
+;---------------------------------------------------------------
+; REC_POSALL - append "FD p1..p7" (move all to the current pose)
+;
+; Opens a Learn program: the FD record holds the seven current motor
+; positions $0000-$0006 so playback first returns to the starting pose.
+;
+; In:        LRN_PTR
+; Out:       LRN_PTR += 8, $3A written after it                 (contract)
+; Memory:    writes 9 bytes of the program area
+;---------------------------------------------------------------
+C  EF80 ROOM_CHK: 9 bytes free?
+C  EF82 MOVE ALL
+C  EFA2 terminator
+C  EFAC LRN_PTR += 8
+
+# ---------------------------------------------------------------
+L  EFB7 PTR_BACK3
+H  EFB7
+;---------------------------------------------------------------
+; PTR_BACK3 - step a program pointer back one 3-byte record
+;
+; Leaves Learn mode for the Executive ($E102 -> $F423) when the result would
+; fall below LRN_START, which is how Backup and Return end.
+;
+; In:        A = pointer low byte, B = pointer high byte (note: low in A)
+; Out:       B:A = pointer - 3                                  (contract)
+;---------------------------------------------------------------
+C  EFBB compare with LRN_START (high, then low)
+C  EFC3 still at or above the start
+C  EFC5 past the start: back to the Executive
+# ================= speech phrase dictionary $FA4B-$FED2 =================
+B  FA4B ===============================================================
+B  FA4B SPEECH PHRASE DICTIONARY ($FA4B-$FED2)
+B  FA4B 28 canned SC-01 phoneme strings for user programs (Speak 71/72 aaaa, or BF aaaa chains).
+B  FA4B Each byte: bits 5-0 = SC-01 phoneme, bits 7-6 = inflection (pitch); $FF ends a string.
+B  FA4B Phoneme $3F is the SC-01 STOP phoneme (a silence inside a phrase), not a terminator.
+B  FA4B None of the phrases uses BF chaining, and nothing in the ROM refers to them: there is no
+B  FA4B phrase address table and no code in this block (checked: no 16-bit reference to any phrase
+B  FA4B start anywhere in $E000-$FFFF). The manual's BF example starts its chain at $FAB4, which
+B  FA4B lands inside PH_MOVEARM ("...ove my arm") - probably a typo for one of the phrase starts.
+B  FA4B ===============================================================
+L  FA4B PH_MYNAME
+R  FA4B FA63 phon
+B  FA4B PH_MYNAME says: "Hello, my name is Hero."
+L  FA64 PH_HEATHBOT
+R  FA64 FA92 phon
+B  FA64 PH_HEATHBOT says: "Hello, I am Hero, the Heath educational robot."
+L  FA93 PH_CANTALK
+R  FA93 FAA9 phon
+B  FA93 PH_CANTALK says: "I can talk like this."  (the manual's 72 FA93 example)
+L  FAAA PH_MOVEARM
+R  FAAA FABF phon
+B  FAAA PH_MOVEARM says: "I can move my arm."
+L  FAC0 PH_GRIPPER
+R  FAC0 FAD9 phon
+B  FAC0 PH_GRIPPER says: "I can use my gripper."
+L  FADA PH_TURNHEAD
+R  FADA FAF0 phon
+B  FADA PH_TURNHEAD says: "I can turn my head."
+L  FAF1 PH_MOVEABOUT
+R  FAF1 FB08 phon
+B  FAF1 PH_MOVEABOUT says: "And I can move about."
+L  FB09 PH_SENSE
+R  FB09 FB36 phon
+B  FB09 PH_SENSE says: "Also I can sense light, sound and movement."
+L  FB37 PH_SEELIGHT
+R  FB37 FB44 phon
+B  FB37 PH_SEELIGHT says: "I see light."
+L  FB45 PH_DARK
+R  FB45 FB55 phon
+B  FB45 PH_DARK says: "Wow, it is dark." (first word probably "wow"; a STOP phoneme separates the halves)
+L  FB56 PH_SOMEMOVED
+R  FB56 FB6A phon
+B  FB56 PH_SOMEMOVED says: "Wait, something moved."
+L  FB6B PH_HEARD
+R  FB6B FB7A phon
+B  FB6B PH_HEARD says: "I heard that."
+L  FB7B PH_INMYWAY
+R  FB7B FB99 phon
+B  FB7B PH_INMYWAY says: "There is something in my way."
+L  FB9A PH_HELP
+R  FB9A FBC0 phon
+B  FB9A PH_HELP says: "Help! Help! Help! ... Alarm, emergency."
+L  FBC1 PH_BRAIN
+R  FBC1 FC5A phon
+B  FBC1 PH_BRAIN says: "I have a brain just like you do, but my brain is a computer. My owner programs my computer for me, and I always do as I'm programmed."
+L  FC5B PH_BADROBOT
+R  FC5B FC9C phon
+B  FC5B PH_BADROBOT says: "There is no such thing as a bad robot, just a misprogrammed one."
+L  FC9D PH_PERFECT
+R  FC9D FCC4 phon
+B  FC9D PH_PERFECT says: "Gosh, I think I'm just about perfect."
+L  FCC5 PH_HUG
+R  FCC5 FD03 phon
+B  FCC5 PH_HUG says: "I think you are cute. Give me a hug. Robots need love too."
+L  FD04 PH_ATTRACT
+R  FD04 FD2B phon
+B  FD04 PH_ATTRACT says: "You are very attractive for a human."
+L  FD2C PH_HANDSOME
+R  FD2C FD45 phon
+B  FD2C PH_HANDSOME says: "Yes sir, you are handsome."
+L  FD46 PH_COMMAND
+R  FD46 FD5F phon
+B  FD46 PH_COMMAND says: "Your wish is my command."
+L  FD60 PH_DONTHURT
+R  FD60 FD90 phon
+B  FD60 PH_DONTHURT says: "Oh, my! Please do not do anything to hurt me." (embedded STOP phonemes give the pauses)
+L  FD91 PH_QUIET
+R  FD91 FDB9 phon
+B  FD91 PH_QUIET says: "Please be quiet, I'm trying to sleep."
+L  FDBA PH_PET
+R  FDBA FDF6 phon
+B  FDBA PH_PET says: "I think I make an excellent pet. I'm even housetrained."
+L  FDF7 PH_SHORT
+R  FDF7 FE32 phon
+B  FDF7 PH_SHORT says: "People stare at me a lot. I suppose it's because I'm so short."
+L  FE33 PH_INTRUDER
+R  FE33 FE6C phon
+B  FE33 PH_INTRUDER says: "Warning, warning, intruder! I have summoned the police."
+L  FE6D PH_WINDOWS
+R  FE6D FE8B phon
+B  FE6D PH_WINDOWS says: "Oh no, I do not do windows."
+L  FE8C PH_MISTAKE
+R  FE8C FED2 phon
+B  FE8C PH_MISTAKE says: "I am incapable of making a mistake, therefore you must be wrong."
+L  FED3 ROM_FREE
+R  FED3 FFF7 fcb 16
+B  FED3 $FED3-$FFF7: 293 unused bytes, all $FF (erased EPROM), up to the vectors at $FFF8.

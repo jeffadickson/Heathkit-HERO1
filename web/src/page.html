@@ -1,0 +1,563 @@
+<title>Heathkit HERO 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a 46rem reading column like a Heathkit manual; spec sheets, tables and the emulator break out to 66rem. */
+:root{
+  --bg:#ECEFF2; --surface:#FFFFFF; --ink:#17202A; --muted:#566271; --rule:#C9D1DA;
+  --accent:#C8302A; --accent2:#1E6A86;
+  --panel:#1B1E23; --panel-ink:#D9DEE5; --led:#FF3A2E; --led-off:#3A1A18; --key:#2B3038; --key-ink:#F0F3F6;
+  --room:#F7F9FB; --grid:#DCE2E8; --wall:#7C8794;
+  --f-display:"Chakra Petch","Arial Narrow",Arial,sans-serif;
+  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#11151A; --surface:#191F27; --ink:#E3E8EE; --muted:#9AA6B3; --rule:#2B3440;
+  --accent:#FF5B4F; --accent2:#62B4D2; --room:#141A21; --grid:#252E39; --wall:#6E7A88; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#11151A; --surface:#191F27; --ink:#E3E8EE; --muted:#9AA6B3; --rule:#2B3440;
+  --accent:#FF5B4F; --accent2:#62B4D2; --room:#141A21; --grid:#252E39; --wall:#6E7A88; color-scheme:dark }
+
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1.075rem;line-height:1.62;padding-inline:16px;padding-block:0 4rem}
+.col{max-width:46rem;margin-inline:auto}
+.wide{max-width:66rem;margin-inline:auto}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.6rem,4vw,2.1rem);letter-spacing:.01em}
+h3{font-size:1.15rem;letter-spacing:.02em;margin-top:.6rem}
+p{margin:0}
+a{color:var(--accent2)}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+.label{font-family:var(--f-display);font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:.74rem;color:var(--muted)}
+section{display:grid;gap:1.1rem;padding-block:3rem 0}
+.sec-head{display:grid;gap:.4rem;border-top:3px solid var(--ink);padding-top:.8rem}
+.sec-head .label{color:var(--accent)}
+nav.toc{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-family:var(--f-display);font-size:.85rem;letter-spacing:.04em;padding-block:1.2rem 0}
+nav.toc a{color:var(--muted);text-decoration:none} nav.toc a:hover{color:var(--accent)}
+
+.masthead{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:2rem;align-items:center;padding-block:2.5rem 1rem}
+.masthead h1{font-size:clamp(3rem,10vw,5.6rem);font-weight:700;letter-spacing:-.01em}
+.masthead h1 span{color:var(--accent)}
+.masthead .dek{font-size:1.2rem;color:var(--muted);max-width:32rem}
+.masthead .modelno{font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.masthead svg{width:100%;max-width:320px;justify-self:center}
+@media (max-width:640px){.masthead{grid-template-columns:1fr}.masthead svg{max-width:220px}}
+
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));border:1px solid var(--rule);background:var(--surface)}
+.spec div{padding:.8rem 1rem;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);display:grid;gap:.15rem}
+.spec b{font-family:var(--f-display);font-size:1.35rem;font-variant-numeric:tabular-nums}
+.spec small{color:var(--muted);font-size:.85rem;line-height:1.35}
+
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+.tbl{overflow-x:auto;border:1px solid var(--rule);background:var(--surface)}
+th,td{text-align:left;padding:.45rem .7rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-display);font-weight:600;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.op{font-family:var(--f-mono);white-space:nowrap;color:var(--accent)}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+td.mono{font-family:var(--f-mono);font-size:.82rem;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.note{border-left:4px solid var(--accent2);background:var(--surface);padding:.9rem 1.1rem;display:grid;gap:.4rem;font-size:.97rem}
+.note .label{color:var(--accent2)}
+.pull{font-family:var(--f-display);font-size:1.35rem;line-height:1.3;color:var(--accent);font-weight:600}
+figure{margin:0;display:grid;gap:.4rem}
+figcaption{font-size:.85rem;color:var(--muted)}
+ul.plain{display:grid;gap:.45rem;padding-left:1.2rem;margin:0}
+
+.bits{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));font-family:var(--f-mono);font-size:.8rem;text-align:center;border:1px solid var(--rule);background:var(--surface)}
+.bits span{padding:.35rem 0;border-right:1px solid var(--rule)}
+.bits .f{grid-row:2;padding:.3rem .2rem;font-family:var(--f-display);font-size:.72rem;letter-spacing:.04em;border-top:1px solid var(--rule)}
+.f.m{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.f.s{background:color-mix(in srgb,var(--accent2) 18%,transparent)}
+.f.d{background:color-mix(in srgb,var(--ink) 10%,transparent)}
+
+/* register model */
+.regs{display:grid;gap:.35rem;font-family:var(--f-mono);font-size:.85rem;background:var(--surface);border:1px solid var(--rule);padding:1rem}
+.reg{display:grid;grid-template-columns:4.5rem minmax(0,1fr) minmax(0,9rem);gap:.6rem;align-items:center}
+.reg .bar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--ink);height:1.7rem}
+.reg .bar span{border-right:1px solid var(--rule);display:grid;place-items:center;font-size:.72rem}
+.reg .bar span:last-child{border-right:0}
+.reg .w8{width:50%} .reg .nm{font-family:var(--f-display);font-weight:600}
+.reg .ds{color:var(--muted);font-family:var(--f-body);font-size:.85rem}
+.reg .cc span{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.reg .cc span.fix{background:transparent;color:var(--muted)}
+@media (max-width:560px){.reg{grid-template-columns:3rem minmax(0,1fr)}.reg .ds{grid-column:1/-1}}
+
+/* memory map */
+.memmap{display:grid;border:1px solid var(--rule);background:var(--surface);font-size:.9rem}
+.memmap div{display:grid;grid-template-columns:8.2rem minmax(0,1fr);gap:.8rem;padding:.4rem .8rem;border-bottom:1px solid var(--rule)}
+.memmap div:last-child{border-bottom:0}
+.memmap .a{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.memmap .ram{border-left:6px solid var(--accent2)} .memmap .rom{border-left:6px solid var(--accent)} .memmap .io{border-left:6px solid var(--ink)} .memmap .ex{border-left:6px solid var(--rule)}
+
+/* emulator */
+.emu{display:grid;grid-template-columns:minmax(0,19rem) minmax(0,1fr);gap:1rem;align-items:start}
+@media (max-width:860px){.emu{grid-template-columns:1fr}}
+.headpanel{background:var(--panel);color:var(--panel-ink);border-radius:14px;padding:1rem;display:grid;gap:.9rem}
+.seg{background:#0E0F12;border-radius:6px;padding:.6rem .5rem}
+.seg svg{width:100%;height:auto;display:block}
+.seg .s{fill:var(--led-off)} .seg .s.on{fill:var(--led)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem}
+.keys button,.xbtn button{font-family:var(--f-display);font-weight:600;font-size:1.1rem;border:0;border-radius:6px;padding:.55rem 0;background:var(--key);color:var(--key-ink);cursor:pointer;box-shadow:0 2px 0 #0008}
+.keys button.hit{background:var(--led);color:#1B0907}
+.keys button:active,.xbtn button:active{transform:translateY(1px);box-shadow:none}
+.keys button.reset{font-size:.78rem;letter-spacing:.08em;background:#5A2622}
+.xbtn{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem}
+.xbtn button{font-size:.74rem;letter-spacing:.07em;background:#363C46;padding:.5rem .2rem}
+.xbtn label{font-family:var(--f-display);font-size:.74rem;letter-spacing:.06em;display:flex;align-items:center;gap:.4rem;color:#BFC6CF}
+.xbtn input[type=range]{width:100%}
+.panel-note{font-size:.76rem;color:#9AA3AE;font-family:var(--f-mono);line-height:1.45}
+.stage{display:grid;gap:.75rem;min-width:0}
+canvas{width:100%;height:auto;display:block;background:var(--room);border:1px solid var(--rule);border-radius:8px}
+.loader{display:grid;gap:.5rem;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:.7rem .8rem}
+.loader-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.loader select{font-family:var(--f-body);font-size:.95rem;padding:.35rem .4rem;border-radius:6px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);min-width:0;max-width:100%}
+.loader button{font-family:var(--f-display);font-weight:600;font-size:.82rem;letter-spacing:.05em;padding:.45rem .8rem;border-radius:6px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.loader button.go{background:var(--accent);border-color:var(--accent);color:#fff}
+.loader .src{font-size:.85rem;color:var(--muted)}
+.loader .seq{font-family:var(--f-mono);font-size:.82rem}
+.emu-row{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:.75rem}
+@media (max-width:600px){.emu-row{grid-template-columns:1fr}}
+.listing{font-family:var(--f-mono);font-size:.74rem;background:var(--surface);border:1px solid var(--rule);border-radius:8px;height:18rem;overflow:auto}
+.listing div{display:grid;grid-template-columns:2.9rem 6.2rem minmax(0,1fr);gap:.35rem;padding:.08rem .5rem;white-space:nowrap}
+.listing .pc{background:color-mix(in srgb,var(--accent) 24%,transparent)}
+.listing .a{color:var(--muted)} .listing .b{color:var(--accent2)} .listing .rl{color:var(--accent)} .listing .dt{color:var(--muted);font-style:italic}
+.listing .mode{grid-template-columns:1fr;color:var(--muted);font-family:var(--f-display);letter-spacing:.06em;font-size:.7rem;padding-top:.3rem}
+.side{display:grid;gap:.6rem;align-content:start}
+.kv{font-family:var(--f-mono);font-size:.74rem;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:.45rem .6rem;display:grid;grid-template-columns:auto 1fr auto;gap:.08rem .6rem;font-variant-numeric:tabular-nums}
+.kv .k{color:var(--muted)}
+.kv .hdr{grid-column:1/-1;font-family:var(--f-display);letter-spacing:.08em;font-size:.68rem;color:var(--muted);text-transform:uppercase}
+.statusline{display:flex;flex-wrap:wrap;gap:.4rem .8rem;font-family:var(--f-mono);font-size:.78rem;align-items:center}
+.pill{font-family:var(--f-display);font-size:.72rem;letter-spacing:.08em;padding:.15rem .5rem;border-radius:99px;border:1px solid var(--rule)}
+.pill.robot{background:var(--accent);border-color:var(--accent);color:#fff}
+.pill.machine{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.speech{color:var(--accent)}
+.log{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:.4rem .6rem;height:5.4rem;overflow:auto}
+
+.family{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));border:1px solid var(--rule);background:var(--surface)}
+.family article{padding:1rem;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);display:grid;gap:.4rem;align-content:start}
+.family h3{margin:0} .family h3 span{font-family:var(--f-mono);font-weight:400;font-size:.8rem;color:var(--muted)}
+.family p{font-size:.93rem}
+ol.sources{font-size:.88rem;display:grid;gap:.35rem;padding-left:1.2rem}
+footer{margin-top:3rem;font-size:.85rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+
+<header class="wide masthead">
+  <div style="display:grid;gap:1rem">
+    <span class="label">Heath Company · Benton Harbor, Michigan · 1982</span>
+    <h1>HERO<span>&nbsp;1</span></h1>
+    <p class="dek">A 39-pound mobile robot with sonar, a five-axis arm and a phoneme voice, sold through a mail-order kit catalog and assembled on kitchen tables and in college labs. Forty years before Optimus.</p>
+    <span class="modelno">ET-18 kit · ETW-18 factory-wired · "Heathkit Educational RObot"</span>
+  </div>
+  <svg viewBox="0 0 240 300" role="img" aria-label="Line drawing of the HERO 1 robot: domed rotating head with keypad, arm extending forward, octagonal body on a three-wheel base">
+    <g fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M45 140 Q45 70 120 62 Q195 70 195 140 Z" fill="var(--surface)"/>
+      <rect x="92" y="78" width="56" height="14" rx="2" fill="var(--panel)"/>
+      <g fill="var(--led)" stroke="none"><rect x="96" y="82" width="6" height="6"/><rect x="104" y="82" width="6" height="6"/><rect x="112" y="82" width="6" height="6"/><rect x="120" y="82" width="6" height="6"/><rect x="128" y="82" width="6" height="6"/><rect x="136" y="82" width="6" height="6"/></g>
+      <g stroke-width="1.5"><rect x="104" y="96" width="32" height="36" rx="2"/><path d="M114.7 96v36M125.3 96v36M104 102h32M104 108h32M104 114h32M104 120h32M104 126h32"/></g>
+      <circle cx="68" cy="112" r="9" fill="var(--surface)"/><circle cx="68" cy="112" r="4" fill="var(--ink)"/>
+      <circle cx="172" cy="104" r="6" fill="var(--accent)" stroke="none"/>
+      <path d="M40 140h160v10H40z" fill="var(--ink)"/>
+      <path d="M52 150h136l14 100H38z" fill="var(--surface)"/>
+      <path d="M70 150l-8 100M170 150l8 100" stroke-width="1.5"/>
+      <rect x="95" y="175" width="50" height="40" rx="3" stroke-width="1.5"/>
+      <path d="M34 250h172v14H34z" fill="var(--ink)"/>
+      <circle cx="62" cy="272" r="12" fill="var(--surface)"/><circle cx="178" cy="272" r="12" fill="var(--surface)"/>
+      <path d="M195 112h22l10 30" stroke-width="7" stroke="var(--ink)"/>
+      <path d="M195 112h22l10 30" stroke-width="3" stroke="var(--surface)"/>
+      <path d="M220 142l-6 16M234 142l6 16" stroke-width="3"/>
+    </g>
+  </svg>
+</header>
+
+<div class="wide">
+  <div class="spec">
+    <div><span class="label">Complete kit, 1982</span><b>$1,500</b><small>About $5,260 in 2027 dollars. Factory-built: $2,500, about $8,760.</small></div>
+    <div><span class="label">Sold</span><b>~14,000</b><small>Over roughly eight years</small></div>
+    <div><span class="label">Brain</span><b>Motorola 6808</b><small>3.58 MHz crystal ÷ 4 ≈ 0.9 MHz; 4 KB RAM, 8 KB ROM</small></div>
+    <div><span class="label">Size</span><b>20 in · 39 lb</b><small>18 in diameter, four 6 V gel cells</small></div>
+  </div>
+  <nav class="toc" aria-label="Chapters">
+    <a href="#what">1 What it was</a><a href="#origins">2 Origins</a><a href="#users">3 Who used it</a><a href="#cost">4 What it cost</a><a href="#cpu">5 The 6800</a><a href="#hardware">6 Hardware</a><a href="#program">7 Programming</a><a href="#emulator">8 Emulator</a><a href="#family">9 Family</a><a href="#sources">Sources</a>
+  </nav>
+</div>
+
+<main class="col">
+<section id="what">
+  <div class="sec-head"><span class="label">1 · What it was</span><h2>A real robot, from the people who sold you an oscilloscope kit</h2></div>
+  <p>At a December 1982 press conference Heath introduced HERO 1 as the nation's first mass-produced robot with a full set of senses. Reporters reached for the obvious comparison and said it looked like R2-D2. It could see light, hear sound, detect motion, range objects by sonar, talk through a phoneme synthesizer, roll around on three wheels and pick things up with a five-axis arm. Everything was run by an onboard Motorola 6808 that you programmed in hex on a keypad on its head.</p>
+  <p>Like every Heathkit, it came two ways. The <b>ET-18</b> was a box of parts and a 213-page assembly manual; Heath estimated 40 to 60 hours of work and advised beginners not to try it. The <b>ETW-18</b> arrived wired and tested, with the arm and voice included. Heath kept supporting the HERO family until 1995, and about 14,000 HERO 1s were sold.</p>
+  <div class="note"><span class="label">On the sales number</span><p>Wikipedia and most retellings say 14,000 HERO 1s over eight years. The long-running owners' FAQ phrases the same figure as "14,000 assembled Hero 1's," which would put kits on top of it. Treat 14,000 as the best available total and the kit/wired split as unknown.</p></div>
+</section>
+
+<section id="origins">
+  <div class="sec-head"><span class="label">2 · Origins</span><h2>How a kit company ended up building robots</h2></div>
+  <p>The robot came out of Heath's education business rather than its hobby kits. Lou Frenzel had come to Heath from McGraw-Hill's home-study business in the early 1970s to start a line of self-instruction courses, each paired with a kit trainer you built and experimented on. The first products shipped in 1974. Microprocessor courses followed, built around the ET-3400 trainer: a 6800 on a board with a hex keypad and six LED digits. Frenzel later wrote that he helped conceive HERO and that his team designed and built it.</p>
+  <p>Seen from there, HERO 1 is an ET-3400 that grew wheels. It used the same processor family, the same keypad-and-seven-segment monitor and the same teaching method, and it shipped with a robotics course written by the same group. Heath was betting on industrial automation: robot counts in US plants were expected to grow more than tenfold during the decade, and those plants would need trained technicians.</p>
+  <p>The timing is notable. Heath started the project in October 1979, the same year Zenith bought the company from Schlumberger, the oil-services firm that also owned Fairchild Semiconductor. The block diagram in the schematic set carries a 1980 Heath copyright, so the electrical design was largely done two years before launch. The hard part was mechanical. A later education product manager recalled that Heath had exactly two mechanical engineers on staff, and Frenzel singled out the arm as the toughest part of the job. Owners' repair notes about loose wrists and binding heads bear that out.</p>
+  <p>The line outlived the company that made it. As Heath wound down in the 1990s it sold the HERO rights, documentation and parts to Mobile Ed Productions of Redford, Michigan. In 2002 Robert Doerr's Robot Workshop bought them and still supports HERO owners with parts and repairs.</p>
+</section>
+
+<section id="users">
+  <div class="sec-head"><span class="label">3 · Who used it</span><h2>Training rooms first, hobbyists second</h2></div>
+  <p>Heath said plainly at launch that industry was the first target and the home would come later. HERO 1 was mainly a teaching instrument, and the evidence of its use comes from four directions.</p>
+  <ul class="plain">
+    <li><b>Industrial and vocational training.</b> The companion course (Robotics and Industrial Electronics) ran twelve lessons, about 120 hours, from robot fundamentals and fluid power through the 6808, sensors, speech and industrial robots, with an optional final exam graded by Heath. Creative Computing's 1983 review described it as built for industrial training as well as individuals. Heath's education group sold through representatives who called on technical schools.</li>
+    <li><b>Colleges and universities.</b> CUNY's New York City College of Technology kept a HERO teaching students for about fifteen years before a student club revived it in 2017. The University of Wollongong wrote a 1984 working paper on loading HERO programs from Unix. A 1985 University of Central Florida master's thesis built a high-level language and compiler for it, and a 1987 Korean paper did the same on an Apple II. Czech Technical University rebuilt one with a PC/104 controller in 2007. One professor used his in embedded-systems classes because students could see their code move something, and blocked off the stairwells because the robot sometimes headed for them.</li>
+    <li><b>Schools and teachers.</b> Individual teachers built them. A COMPUTE! columnist taught a 1983 robotics course in England on a HERO borrowed from Zenith Data Systems, and a former teacher remembers programming one to play Red Light, Green Light with kindergartners.</li>
+    <li><b>Hobbyists and television.</b> Owners formed a mailing list and a user group that still trade parts and upgrades. HERO appeared on several episodes of <i>Mr. Wizard's World</i>, which is how many people first saw a robot that was not a movie prop.</li>
+  </ul>
+  <div class="note"><span class="label">What the record does not show</span><p>No source gives a count of school or college installations, and nothing I found documents military use. The usage picture above is assembled from individual institutions and reviews.</p></div>
+</section>
+
+<section id="cost">
+  <div class="sec-head"><span class="label">4 · What it cost</span><h2>About the price of a used car</h2></div>
+  <p>Converted with BLS CPI-U annual averages to 2027 dollars (2027 projected at +2.5% a year from 2025), the same method used for the machine tables in the TRS-80 book.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Item</th><th>Year</th><th class="num">Then</th><th class="num">2027 dollars</th></tr></thead>
+    <tbody>
+      <tr><td>HERO 1 complete kit (robot, arm, voice)</td><td>1982</td><td class="num">$1,500</td><td class="num">$5,260</td></tr>
+      <tr><td>HERO 1 factory-built ETW-18</td><td>1982</td><td class="num">$2,500</td><td class="num">$8,760</td></tr>
+      <tr><td>Robot kit alone (ET-18)</td><td>1983</td><td class="num">$999.95</td><td class="num">$3,400</td></tr>
+      <tr><td>Arm kit (ET-18-1)</td><td>1983</td><td class="num">$399.95</td><td class="num">$1,360</td></tr>
+      <tr><td>Voice kit (ET-18-2)</td><td>1983</td><td class="num">$149.95</td><td class="num">$510</td></tr>
+      <tr><td>HERO 1 kit / assembled, mid-1985</td><td>1985</td><td class="num">$1,150 / $2,149</td><td class="num">$3,620 / $6,760</td></tr>
+      <tr><td>HERO Jr. kit / assembled</td><td>1984</td><td class="num">$599.95 / $1,000</td><td class="num">$1,950 / $3,260</td></tr>
+      <tr><td>HERO 2000 kit / assembled</td><td>1986</td><td class="num">$3,000 / $4,500</td><td class="num">$9,260 / $13,890</td></tr>
+      <tr><td>Motorola MC6800, single unit at launch</td><td>1974</td><td class="num">$360</td><td class="num">$2,470</td></tr>
+    </tbody>
+  </table></div>
+  <p>The 1983 component prices add up to $1,549.85, which is where the "$1,500 kit" figure comes from. For comparison, a 16 KB TRS-80 Model III cost $999 in 1980. A fully equipped HERO cost about as much as a well-equipped personal computer with disk drives.</p>
+</section>
+
+<section id="cpu">
+  <div class="sec-head"><span class="label">5 · The chip</span><h2>The Motorola 6800 family</h2></div>
+  <p>Motorola announced the MC6800 in March 1974, a few weeks before Intel's 8080. The chief architect was Tom Bennett, working with a team that included Jeff LaVell, Mike Wiles and Rod Orgill; Chuck Peddle joined in 1973 to take it to customers. It was an n-channel MOS part of about 4,000 transistors that ran at up to 1 MHz. Its most practical advantage over the 8080 was power: it needed only a single +5 V supply, while the 8080 needed three.</p>
+  <p>The architecture is clean and very readable. Two 8-bit accumulators, A and B, a 16-bit index register X, a 16-bit stack pointer, a 16-bit program counter and a condition-code register. It has 72 instructions in seven addressing modes, encoded in 197 opcodes, with memory-mapped I/O and no separate I/O space. Anyone who later met the 6502, 6809, 68HC11 or even the 68000 will recognize the style.</p>
+  <figure>
+    <div class="regs" role="img" aria-label="6800 programmer's model: accumulators A and B, index register X, program counter, stack pointer, condition codes 1 1 H I N Z V C">
+      <div class="reg"><span class="nm">A</span><div class="bar w8"><span>8-bit accumulator</span></div><span class="ds">Arithmetic and logic</span></div>
+      <div class="reg"><span class="nm">B</span><div class="bar w8"><span>8-bit accumulator</span></div><span class="ds">Second accumulator</span></div>
+      <div class="reg"><span class="nm">X</span><div class="bar"><span>16-bit index register</span></div><span class="ds">Pointer; addresses $nn,X</span></div>
+      <div class="reg"><span class="nm">PC</span><div class="bar"><span>16-bit program counter</span></div><span class="ds">64 KB address space</span></div>
+      <div class="reg"><span class="nm">SP</span><div class="bar"><span>16-bit stack pointer</span></div><span class="ds">Grows downward</span></div>
+      <div class="reg"><span class="nm">CC</span><div class="bar w8 cc"><span class="fix">1</span><span class="fix">1</span><span>H</span><span>I</span><span>N</span><span>Z</span><span>V</span><span>C</span></div><span class="ds">Half-carry, IRQ mask, negative, zero, overflow, carry</span></div>
+    </div>
+    <figcaption>The 6800 programmer's model. The two top bits of CC always read as 1.</figcaption>
+  </figure>
+  <h3>The chip that spawned the 6502</h3>
+  <p>The 6800's most famous descendant is not a Motorola part. Launch pricing was $360, matching the 8080. In August 1974 Chuck Peddle left for MOS Technology in Pennsylvania, and seven Motorola engineers followed. There they built the 6501, which plugged into a 6800 socket, and the 6502, which had its own clock generator. Neither ran 6800 software. Selling for $20 to $25, they forced Motorola to cut the 6800 from $175 to $69 in October 1975. Motorola sued; in the April 1976 settlement MOS dropped the 6501, and the 6800 fell to $35. The cheap 6502 went on to the Apple II, the Commodore PET and the Atari 400/800.</p>
+  <h3>Why HERO has a 6808</h3>
+  <p>In 1977 Motorola released the MC6802, a 6800 with an on-chip clock oscillator and 128 bytes of RAM. The MC6808 is the same die with the RAM disabled, which let Motorola sell parts whose internal RAM had failed test. For Heath this was ideal. One crystal replaced the 6800's separate two-phase clock chip, and the robot needed external RAM anyway. The crystal is 3.579545 MHz, the NTSC color-burst frequency and the cheapest crystal in the world in 1980, divided by four internally for a bus of about 895 kHz. Heath's courses and the ET-3400 trainer already taught the 6800, so the robot course could build on lessons students had already taken.</p>
+  <p>The 6800 also left something useful unused. 197 of 256 opcodes are defined, which leaves 59 holes. HERO's Robot Interpreter fills those holes with robot commands. See chapter 7.</p>
+  <p>Other 6800-family machines include the Altair 680, the SWTPC 6800 (the most successful 6800 personal computer), the Sphere, the Tektronix 4051 graphics computer, the HP 9815A, the APF MP1000 console, and many arcade and pinball boards.</p>
+</section>
+
+<section id="hardware">
+  <div class="sec-head"><span class="label">6 · Hardware</span><h2>Fifteen boards in a fiberglass shell</h2></div>
+  <p>HERO 1 is a bus-and-backplane machine folded into a robot. The CPU and I/O boards sit in the head next to the keypad and display. The power supply, drive electronics and batteries live in the base, and the boards are connected by ribbon cables through the rotating neck. Heath numbered every component by the board it sits on, so a part's reference designator tells you where to look.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Parts</th><th>Board</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">U401…</td><td>CPU</td><td>MC6808 (U401) with a 3.579545 MHz crystal. Two 6116 2K×8 static RAMs (U415, U416) at $0000–$0FFF. 8 KB system ROM (U418) at $E000–$FFFF. A socket for an optional 2/4/8 KB ROM (U417) at $2000. 74LS138s decode 8 KB blocks from A13–A15 and VMA. Eight 74LS73 flip-flops latch interrupt sources onto the single IRQ line.</td></tr>
+      <tr><td class="mono">U301…</td><td>I/O</td><td>74LS374 output and 74LS244 input ports in the $C2xx page. MSM5832 real-time clock on its own 32.768 kHz crystal. Sonar range counter. Sleep and wake logic that shuts everything down except RAM and the clock.</td></tr>
+      <tr><td class="mono">U1201…</td><td>Display</td><td>Six 74LS259 addressable latches, one per digit. Every segment is latched individually, so the display is static, not multiplexed, and the CPU spends no time refreshing it.</td></tr>
+      <tr><td class="mono">U601…</td><td>Sense</td><td>Dynamic microphone and photoresistor feeding an A/D converter. Their levels are read at the sense port $C240.</td></tr>
+      <tr><td class="mono">U101 / U1101…</td><td>Sonar transmit / receive</td><td>Bursts of eight cycles at about 32 kHz. The receiver is two CA3130 stages with 80 dB of gain. The I/O board counts time-of-flight against the 32 kHz reference. Range is 4 in to 8 ft.</td></tr>
+      <tr><td class="mono">U1401…</td><td>Motion</td><td>A continuous-wave ultrasonic motion detector good to about 15 ft. It raises an interrupt.</td></tr>
+      <tr><td class="mono">U701… / U801…</td><td>Arm drive / main drive</td><td>Steppers for head, steering and five arm axes, switched by 4N26 opto-isolators driving Darlington pairs, so motor noise stays off the logic supply. The DC drive motor is PWM-controlled by an LM556, with an optical encoder disk on the drive wheel.</td></tr>
+      <tr><td class="mono">U501…</td><td>Speech</td><td>Votrax SC-01 phoneme synthesizer and LM388 amplifier. The CPU writes a 6-bit phoneme (plus 2 inflection bits) to $C240; the chip asks for the next one when it finishes.</td></tr>
+      <tr><td class="mono">U201…</td><td>Power supply</td><td>Four 6 V, 4 Ah gel cells form separate 12 V logic and motor systems. An SG3524 switching regulator makes the +5 V logic supply. The charger floats the cells at 13.9 V, and a cutout trips at 10 V.</td></tr>
+      <tr><td class="mono">U1301… / U1501… / U901…</td><td>Experimental, wrist/shoulder, remote</td><td>The breadboard on the head, wired to the bus, plus the Abort button and Sleep switch. The arm's local board. The optional RF remote.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Memory map</h3>
+  <div class="memmap">
+    <div class="ram"><span class="a">$0000–$0038</span><span>Motor positions ($0000–$0006), sonar hits/range ($0010/$0011), interrupt vectors ($0027 motion, $002A pendant trigger, $002D experimental IRQ), user keys ($0030/$0033/$0036)</span></div>
+    <div class="ram"><span class="a">$0039–$0EDE</span><span>User program RAM (2 × 6116)</span></div>
+    <div class="ram"><span class="a">$0EDF–$0FFF</span><span>Monitor workspace: stack, display pointer DIGADD ($0FF2), 1,024 Hz tick counter ($0EFC)</span></div>
+    <div class="ex"><span class="a">$1000–$1FFF</span><span>Unused on a stock robot; the ET-18-6 memory board fills $1000–$BFFF</span></div>
+    <div class="ex"><span class="a">$2000–$3FFF</span><span>Optional ROM socket U417 (BASIC, utility and demo ROMs)</span></div>
+    <div class="io"><span class="a">$C000–$C3FF</span><span>I/O: keypad $C003, display $C110, interrupt status $C200, sonar $C220, sense and speech $C240, motors $C260/$C280/$C2A0, power $C2E0, clock $C300</span></div>
+    <div class="rom"><span class="a">$E000–$FFFF</span><span>8 KB system ROM: executive, monitor, display and keypad routines, Robot Interpreter, phrase table, vectors</span></div>
+  </div>
+  <h3>The schematics</h3>
+  <p>Heath's complete set survives: four large schematic sheets, the block and interconnect diagram, the 137-page Technical Manual with theory of operation and parts lists, the 213-page Assembly Manual, and the arm, voice, remote, memory-expansion and ROM-accessory manuals. They are on archive.org as <a href="https://archive.org/details/heathkit-hero-1-ET-18">HEATHKIT HERO-1 ET-18 Robot Manuals and Schematics</a>.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Sheet</th><th>Circuits</th></tr></thead>
+    <tbody>
+      <tr><td>1 of 4</td><td>Sense, sonar receive, sonar transmit, teaching pendant</td></tr>
+      <tr><td>2 of 4</td><td>Arm drive, CPU, charger</td></tr>
+      <tr><td>3 of 4</td><td>I/O, main drive, power supply</td></tr>
+      <tr><td>4 of 4</td><td>Display, motion</td></tr>
+      <tr><td>Block diagram</td><td>Interconnect of all boards and cables; keypad layout; board numbering</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="program">
+  <div class="sec-head"><span class="label">7 · Programming</span><h2>Hex on the head, or a pendant in your hand</h2></div>
+  <ul class="plain">
+    <li><b>Keypad and monitor.</b> From the executive ("ready") mode, press 1 for Machine Language or A for Robot Language. In the monitor, A autoloads (type an address, then two digits per byte), E examines, F and B step forward and back, C changes a byte, and D runs ("do") from an address. Keys 1–4 show A, B, PC and X.</li>
+    <li><b>Teaching pendant.</b> A hand box with a motor selector, direction buttons and a trigger. In learn mode the robot records each motion and replays it. The trigger is also an interrupt your programs can use.</li>
+    <li><b>Robot Interpreter.</b> The command language described below.</li>
+    <li><b>Host computer.</b> Later options added RS-232, a memory board and a BASIC ROM. Third parties offered compilers for the IBM PC and Apple II: ANDROTEXT, Dunfield's C and several university languages.</li>
+  </ul>
+  <h3>The trick inside the Robot Interpreter</h3>
+  <p>Heath did not invent a separate bytecode. The interpreter treats the 59 opcodes Motorola left undefined as robot commands, and it executes every ordinary 6800 instruction as well. You switch into it with SWI (<code>3F</code>) and back to native code with <code>83</code>, so one program can mix both. The cost is speed: each interpreted instruction takes several hundred extra cycles. The manual's own benchmark runs a 6,000-pass delay loop in about 41 seconds in Robot Language and 0.3 seconds in Machine Language.</p>
+  <p class="pull">Every motor command packs motor, speed, direction and a 10-bit position into one 16-bit word.</p>
+  <div class="bits" aria-label="Motor word bit layout: bits 15 to 13 motor, 12 to 11 speed, 10 direction, 9 to 0 position or distance">
+    <span>15</span><span>14</span><span>13</span><span>12</span><span>11</span><span>10</span><span>9</span><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span><span>0</span>
+    <span class="f m" style="grid-column:1/4">motor</span><span class="f s" style="grid-column:4/6">speed</span><span class="f" style="grid-column:6/7">D</span><span class="f d" style="grid-column:7/17">position (abs) or distance (rel)</span>
+  </div>
+  <p style="font-size:.95rem;color:var(--muted)">Motor: 0 drive, 1 extend, 2 shoulder, 3 wrist rotate, 4 wrist pivot, 5 gripper, 6 head, 7 steering. Speed: 01 slow, 10 medium, 11 fast. D = 0 runs toward a higher position number, D = 1 toward a lower one; for the drive motor it means forward or reverse. Head to $0BE at medium is <code>110 10 0 0010111110</code> = <code>$D0BE</code>, so the instruction is <code>CC D0 BE</code>. The interpreter moves only one arm or head motor at a time and queues the rest.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Op</th><th>Operand</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td class="op">C3 / CC</td><td>ss ii</td><td>Motor to absolute position, then wait / continue</td></tr>
+      <tr><td class="op">D3 / DC</td><td>ss ii</td><td>Motor relative move, then wait / continue</td></tr>
+      <tr><td class="op">E3 / EC · F3 / FC</td><td>oo · aaaa</td><td>Motor absolute, motor word in memory (indexed · extended)</td></tr>
+      <tr><td class="op">FD</td><td>7 bytes</td><td>Extend, shoulder, rotate, pivot, gripper, head, steering to absolute positions</td></tr>
+      <tr><td class="op">61 / 62 · 71 / 72</td><td>oo · aaaa</td><td>Speak phonemes (ending in FF), continue / wait</td></tr>
+      <tr><td class="op">BF</td><td>aaaa</td><td>Inside a phoneme string: jump to another string and come back (eight deep)</td></tr>
+      <tr><td class="op">1C 1D 1E 1F</td><td>oo</td><td>Branch if drive / steering / arm / speech busy</td></tr>
+      <tr><td class="op">87 · 8F</td><td>iiii</td><td>Sleep in 10 s units (Sleep switch set) · pause in 1/16 s units</td></tr>
+      <tr><td class="op">41 42 45 4B 4E</td><td></td><td>Enable light, sound, sonar, motion, display (51 52 5B 55 5E disable)</td></tr>
+      <tr><td class="op">02 03 04 05</td><td></td><td>Abort drive, steering, arm, speech</td></tr>
+      <tr><td class="op">21 · 83 · 3A</td><td></td><td>Zero (home all motors) · switch to Machine Language · return to executive</td></tr>
+    </tbody>
+  </table></div>
+  <h3>ROM services</h3>
+  <p>The monitor ROM exports a handful of display and keypad routines that programs call with JSR, in the same style as the ET-3400. OUTCH and OUTSTR take raw segment patterns rather than ASCII: bit 6 is segment a through bit 0 for g, and bit 7 is the decimal point, which OUTSTR also uses to mark the end of a string. "H" is <code>$37</code>.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Routine</th><th>Address</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td class="op">INCH</td><td class="mono">$F777</td><td>Wait for a debounced key; return it in A</td></tr>
+      <tr><td class="op">OUTCH</td><td class="mono">$F7C8</td><td>Light the segments in A at the next digit</td></tr>
+      <tr><td class="op">OUTHEX · OUTBYT</td><td class="mono">$F7B5 · $F7AD</td><td>Show the low nibble of A · both nibbles of A</td></tr>
+      <tr><td class="op">OUTSTR</td><td class="mono">$F7E5</td><td>Show the segment string following the JSR; the decimal point ends it</td></tr>
+      <tr><td class="op">CLRDIS · REDIS</td><td class="mono">$F65B · $F64E</td><td>Blank the display and home the cursor · home the cursor</td></tr>
+      <tr><td class="op">DSPLAY</td><td class="mono">$F6F9</td><td>Show B bytes (1–3) starting at X</td></tr>
+    </tbody>
+  </table></div>
+</section>
+</main>
+
+<section id="emulator" class="wide">
+  <div class="sec-head"><span class="label">8 · Emulator</span><h2>Run HERO 1 in the browser</h2>
+    <p style="max-width:46rem">This is a working 6808 running real HERO programs, including the examples from Heath's Technical Manual, byte for byte. Pick a program and press <b>Type it for me</b> to watch the key sequence an owner would enter. You can also drive the keypad yourself: RESET, then 1 (Machine) or A (Robot), then D and the four-digit start address. To key in your own code, press RESET, 1, A, an address, and then the bytes.</p></div>
+  <div class="emu">
+    <div class="headpanel">
+      <div class="seg"><svg id="seg" viewBox="0 0 300 64" aria-label="Six-digit LED display"></svg></div>
+      <div class="keys" id="keys"></div>
+      <div class="xbtn">
+        <button id="b-abort" type="button" title="Abort button on the experimental board">ABORT</button>
+        <button id="b-trigger" type="button" title="Teaching pendant trigger (interrupt)">TRIGGER</button>
+        <button id="b-clap" type="button" title="A loud sound at the microphone">CLAP</button>
+        <button id="b-motion" type="button" title="Something moves in front of the motion detector">WALK PAST</button>
+        <label for="light" style="grid-column:1/-1">LIGHT <input id="light" type="range" min="0" max="255" value="96"></label>
+        <label for="sleep" style="grid-column:1/-1"><input id="sleep" type="checkbox"> SLEEP SWITCH AT SLEEP</label>
+      </div>
+      <p class="panel-note">Keypad layout follows Heath's block diagram. ABORT halts and shows the program counter.</p>
+    </div>
+    <div class="stage">
+      <div class="loader">
+        <div class="loader-row">
+          <select id="prog" aria-label="Program"></select>
+          <button id="b-load" type="button">Load into RAM</button>
+          <button id="b-type" type="button" class="go">Type it for me</button>
+          <button id="b-home" type="button">Put robot back</button>
+        </div>
+        <span class="src" id="prog-src"></span>
+        <span class="src" id="prog-note"></span>
+        <span class="seq" id="prog-seq"></span>
+      </div>
+      <canvas id="room" width="640" height="380" aria-label="Top-down view of the robot in a room with two boxes"></canvas>
+      <div class="statusline"><span class="pill" id="mode-pill">EXECUTIVE</span><span id="cyc"></span><span class="speech" id="speech" aria-live="polite"></span></div>
+      <div class="emu-row">
+        <div class="listing" id="listing" aria-label="Disassembly"></div>
+        <div class="side"><div class="kv" id="regs"></div><div class="kv" id="mpos"></div></div>
+      </div>
+      <div class="log" id="log" aria-live="polite"></div>
+    </div>
+  </div>
+  <div class="col" style="margin-top:1rem;display:grid;gap:.8rem">
+    <div class="note"><span class="label">How faithful is it?</span>
+      <p>The CPU is a complete MC6800 core: all 197 opcodes, Motorola's cycle counts and condition codes. It was checked against 200,000 random instructions run on Joe Allen's EXORsim. The only differences were three places where EXORsim departs from Motorola's Programming Reference Manual: ABA's half-carry, CPX's overflow flag, and SWI's interrupt mask.</p>
+      <p>HERO's 8 KB system ROM has not surfaced publicly. The owners' FAQ records that Heath released the ROMs for not-for-profit use by owners, but the images circulated only on a site that is now gone. Its documented services therefore run as JavaScript: the executive and monitor keys, INCH, OUTCH, OUTHEX, OUTBYT, OUTSTR, CLRDIS, REDIS, DSPLAY, interrupt dispatch through the RAM vectors, and the Robot Interpreter. Each follows the Technical Manual's description, including the D-bit and timing corrections from its errata. Interpreter speed comes from the manual's own benchmark.</p>
+      <p>Robot motion is modeled: speeds, the drive's distance per encoder count, the sonar's 0.4-inch range units and the steering geometry are estimates. Prompts like <code>rEAdy</code> are a stand-in for whatever the real ROM printed. When a ROM dump turns up, the same core can run it and these stand-ins go away.</p>
+    </div>
+  </div>
+</section>
+
+<main class="col">
+<section id="family">
+  <div class="sec-head"><span class="label">9 · The family</span><h2>What came after</h2></div>
+</section>
+</main>
+<div class="wide" style="margin-top:1.1rem">
+  <div class="family">
+    <article><h3>HERO 1 <span>1982</span></h3><p>The educational original. 6808, 4 KB RAM, arm, sonar, SC-01 voice. About 14,000 sold.</p></article>
+    <article><h3>HERO Jr. <span>1984</span></h3><p>A home robot from Heath's consumer division with a preprogrammed personality: songs, games, guard duty, alarm clock. 6808, 2 KB RAM, 32 KB ROM, no arm. About 4,000 sold.</p></article>
+    <article><h3>HERO 2000 <span>1986</span></h3><p>An 8088 master with up to eleven slave processors, BASIC in 64 KB of ROM, a card cage, 360° sonar, an optional arm and a floppy drive. About 3,000 sold.</p></article>
+    <article><h3>HE-RObot <span>2007</span></h3><p>A revival built with White Box Robotics on a Windows XP PC. Up to $8,000; about 50 sold before Heathkit's 2012 bankruptcy.</p></article>
+  </div>
+</div>
+
+<main class="col">
+<section id="sources">
+  <div class="sec-head"><span class="label">Sources</span><h2>Where this comes from</h2></div>
+  <ol class="sources">
+    <li><a href="https://archive.org/details/heathkit-hero-1-ET-18">HEATHKIT HERO-1 ET-18 Robot Manuals and Schematics</a>, archive.org: Technical Manual (theory of operation, Robot Interpreter, ROM routines, parts lists), schematics, block diagram.</li>
+    <li><a href="https://en.wikipedia.org/wiki/HERO_(robot)">HERO (robot)</a>, Wikipedia: dates, prices, sales for all models.</li>
+    <li><a href="http://hero.dsavage.net/robots/Hero_FAQ.html">Hero Robot FAQ</a>, Donnie V. Savage: options, memory and port maps, ROM versions, crystal notes, errata.</li>
+    <li><a href="https://www.csmonitor.com/1982/1206/120640.html">"R2D2 for businessmen — and do-it-yourselfers"</a>, Christian Science Monitor, Dec 6, 1982.</li>
+    <li><a href="https://www.atarimagazines.com/creative/v9n11/333_Robotics_and_industrial_e.php">Review of Heath's robotics course</a>, Creative Computing, Nov 1983: course content and component prices.</li>
+    <li><a href="https://k5nd.net/2020/06/heathkit-educational-systems-personal-insight/">Heathkit Educational Systems, a personal insight</a>: Frenzel and Wilson on the education division and the robot.</li>
+    <li><a href="https://www.electronicdesign.com/technologies/analog/article/21801229/whatever-happened-to-heathkit">Frenzel, "Whatever Happened To Heathkit?"</a> and <a href="https://www.electronicdesign.com/blogs/contributed-blogs/archive/communiqu/article/21802667/robots-best-educational-platform-ever">"Robots: Best Educational Platform Ever"</a>, Electronic Design.</li>
+    <li><a href="https://retrotechnology.com/restore/heath_robot.html">Robert Doerr on the HERO line after Heath</a>.</li>
+    <li><a href="https://en.wikipedia.org/wiki/Motorola_6800">Motorola 6800</a>, Wikipedia; Motorola M6800 Programming Reference Manual (1976): instruction definitions used for the CPU core.</li>
+    <li><a href="https://openlab.citytech.cuny.edu/superhero/overview/">City Tech Super HERO</a>, CUNY; <a href="https://ro.uow.edu.au/compsciwp/9">Fulcher, University of Wollongong, 1984</a>; <a href="https://stars.library.ucf.edu/rtd/4833">Fischoff, UCF thesis, 1985</a>; <a href="https://koreascience.kr/article/JAKO198711919593931.pub?lang=en">KIEE Transactions, 1987</a>; <a href="https://support.dce.felk.cvut.cz/mediawiki/images/5/5c/Pr_zeman.pdf">Zeman, ČVUT Prague, 2010</a>.</li>
+    <li><a href="https://www.raspberry-pi-geek.com/index.php/Archive/2015/13/SunRover-part-1-Track-motor-controller-power-system">Raspberry Pi Geek, 2015</a>; <a href="https://www.atarimagazines.com/compute/issue41/On_The_Road.php">COMPUTE!, Oct 1983</a>; <a href="https://vintagecomputer.ca/heathkit-hero-1-et-18-robot/">vintagecomputer.ca</a>: classroom anecdotes.</li>
+    <li><a href="https://github.com/jhallen/exorsim">EXORsim</a>, Joseph H. Allen: reference 6800 simulator used to test the CPU core.</li>
+    <li><a href="https://classic.technology/heathkit-hero-1/">Heathkit Hero 1, Robot and Course</a>: 1983 brochure scan.</li>
+  </ol>
+  <footer>Flintridge Software · retro computing notes · October 2026</footer>
+</section>
+</main>
+
+<script>
+/*@CPU@*/
+</script>
+<script>
+/*@HERO@*/
+</script>
+<script>
+/*@PROGRAMS@*/
+</script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id), hex=Hero.hex;
+const hero=new Hero();
+const P=window.HERO_PROGRAMS;
+let current=P[0];
+
+/* ---- display ---- */
+(function(){
+  const S={a:"6,2 34,2 30,7 10,7",b:"35,4 35,28 31,25 31,8",c:"35,32 35,56 31,52 31,35",d:"6,58 34,58 30,53 10,53",e:"5,32 9,35 9,52 5,56",f:"5,4 9,8 9,25 5,28",g:"7,30 11,27 29,27 33,30 29,33 11,33"};
+  let s="";for(let i=0;i<6;i++){s+='<g transform="translate('+(8+i*48)+',2) skewX(-6)">';for(const k in S)s+='<polygon class="s" data-d="'+i+'" data-k="'+k+'" points="'+S[k]+'"/>';s+='<circle class="s" data-d="'+i+'" data-k="p" cx="41" cy="57" r="3"/></g>';}
+  $("seg").innerHTML=s;
+})();
+const BIT={a:0x40,b:0x20,c:0x10,d:0x08,e:0x04,f:0x02,g:0x01,p:0x80};
+const segEls=[...document.querySelectorAll("#seg .s")];
+function drawSeg(){const off=!hero.sense.display&&hero.mode==="run";segEls.forEach(p=>{const v=hero.seg[+p.dataset.d]||0;p.classList.toggle("on",!off&&!!(v&BIT[p.dataset.k]));});}
+
+/* ---- keypad (layout from the block diagram) ---- */
+const LAYOUT=["D","E","F","A","B","C","7","8","9","4","5","6","1","2","3","0","RESET"];
+const keyEls={};
+LAYOUT.forEach(k=>{const b=document.createElement("button");b.type="button";b.textContent=k;if(k==="RESET"){b.className="reset";b.style.gridColumn="span 2";}
+  b.addEventListener("click",()=>press(k));$("keys").appendChild(b);keyEls[k]=b;});
+function press(k){const el=keyEls[k];if(el){el.classList.add("hit");setTimeout(()=>el.classList.remove("hit"),140);}hero.key(k==="RESET"?"RESET":parseInt(k,16));}
+document.addEventListener("keydown",e=>{if(e.target.closest("select,input"))return;const k=e.key.toUpperCase();if(/^[0-9A-F]$/.test(k)){press(k);e.preventDefault();}else if(k==="ESCAPE"){press("RESET");}});
+
+$("b-abort").onclick=()=>hero.abort();
+$("b-trigger").onclick=()=>{hero.trigger();log("Pendant trigger pulled (IRQ flag set).");};
+$("b-clap").onclick=()=>{hero.clap();log("Clap.");};
+$("b-motion").onclick=()=>{if(hero.sense.motion){hero.motion();log("Motion detected.");}else log("Motion detector is disabled (needs 4B).");};
+$("light").oninput=e=>{hero.levels.light=+e.target.value;};
+$("sleep").onchange=e=>{hero.sleepSwitch=e.target.checked;};
+
+/* ---- programs ---- */
+P.forEach((p,i)=>{const o=document.createElement("option");o.value=i;o.textContent=p.name;$("prog").appendChild(o);});
+function seqFor(p){return ["RESET",p.robot?"A":"1","D",...hex(p.org,4).split("")];}
+function showProg(){current=P[+$("prog").value];$("prog-src").textContent=current.src;$("prog-note").textContent=current.note;$("prog-seq").textContent="Keys: "+seqFor(current).join(" ");buildListing();}
+function loadProg(p){hero.key("RESET");Object.keys(p.bytes).forEach(a=>p.bytes[a].forEach((b,i)=>hero.write(+a+i,b)));log("Loaded "+p.name+" ($"+hex(p.org,4)+").");buildListing();}
+$("prog").onchange=showProg;
+$("b-load").onclick=()=>loadProg(current);
+let typing=null;
+$("b-type").onclick=()=>{if(typing)return;loadProg(current);const seq=seqFor(current);let i=0;typing=setInterval(()=>{press(seq[i++]);if(i>=seq.length){clearInterval(typing);typing=null;}},260);};
+$("b-home").onclick=()=>{const w=hero.world;w.x=160;w.y=300;w.th=0;w.trail=[];};
+
+/* ---- listing: static decode of the loaded program, following 3F/83 mode switches ---- */
+let rows=[],rowByAddr={};
+const SEGCH={0x37:"H",0x4F:"E",0x0E:"L",0x7E:"O",0x20:"!",0x77:"A",0x3E:"U",0x5B:"S",0x67:"P",0x3D:"d",0x1D:"o",0x15:"n",0x05:"r"};
+function buildListing(){
+  const p=current;rows=[];rowByAddr={};const data={};(p.data||[]).forEach(d=>data[d[0]]=d);
+  Object.keys(p.bytes).map(Number).sort((a,b)=>a-b).forEach((start,bi)=>{
+    let a=start,r=bi===0?p.robot:false,end=start+p.bytes[start].length;
+    rows.push({mode:(bi===0?"start ":"")+"$"+hex(start,4)});
+    while(a<end){
+      if(data[a]){const d=data[a];const bytes=[];for(let i=0;i<d[1];i++)bytes.push(hero.read(a+i));
+        const txt=d[2]==="phon"?".PHONEMES "+bytes.filter(v=>v!==0xFF).map(v=>Hero.PH[v&63]).join(" ")+" FF":".SEGMENTS \""+bytes.map(v=>SEGCH[v&0x7F]||"?").join("")+"\"";
+        rows.push({a,b:bytes.slice(0,3).map(v=>hex(v,2)).join(" ")+(bytes.length>3?"…":""),t:txt,dt:true});a+=d[1];continue;}
+      const d=hero.disasm(a,r),n=Math.min(d.len,3),bs=[];for(let i=0;i<n;i++)bs.push(hex(hero.read(a+i),2));
+      rows.push({a,b:bs.join(" ")+(d.len>3?"…":""),t:d.text,rl:d.robot});rowByAddr[a]=rows.length-1;
+      const op=hero.read(a);if(!r&&op===0x3F)r=true;else if(r&&op===0x83)r=false;
+      a+=d.len;
+    }
+  });
+  $("listing").innerHTML=rows.map((x,i)=>x.mode?'<div class="mode">'+x.mode+'</div>':'<div data-i="'+i+'"><span class="a">'+hex(x.a,4)+'</span><span class="b">'+x.b+'</span><span class="'+(x.dt?"dt":x.rl?"rl":"")+'">'+x.t+'</span></div>').join("");
+}
+let lastRow=-1,liveAt=0;
+function liveListing(){liveAt=performance.now();let a=hero.cpu.pc,r=hero.robot;rows=[{mode:"live from $"+hex(a,4)}];rowByAddr={};
+  for(let n=0;n<14;n++){const d=hero.disasm(a,r),bs=[];for(let i=0;i<Math.min(d.len,3);i++)bs.push(hex(hero.read(a+i),2));rows.push({a,b:bs.join(" "),t:d.text,rl:d.robot});rowByAddr[a]=rows.length-1;const op=hero.read(a);if(!r&&op===0x3F)r=true;else if(r&&op===0x83)r=false;a+=d.len;}
+  $("listing").innerHTML=rows.map((x,i)=>x.mode?'<div class="mode">'+x.mode+'</div>':'<div data-i="'+i+'"><span class="a">'+hex(x.a,4)+'</span><span class="b">'+x.b+'</span><span class="'+(x.rl?"rl":"")+'">'+x.t+'</span></div>').join("");lastRow=-1;}
+function markPC(){
+  const i=hero.mode==="run"||hero.mode==="halt"?rowByAddr[hero.cpu.pc]:undefined;
+  if(i===undefined&&hero.mode==="run"&&hero.cpu.pc<0xE000&&performance.now()-liveAt>300){liveListing();return;}
+  if(i===lastRow)return;const L=$("listing");
+  if(lastRow>=0){const o=L.querySelector('[data-i="'+lastRow+'"]');if(o)o.classList.remove("pc");}
+  lastRow=i===undefined?-1:i;
+  if(lastRow>=0){const n=L.querySelector('[data-i="'+lastRow+'"]');if(n){n.classList.add("pc");const top=n.offsetTop-L.offsetTop;if(top<L.scrollTop||top>L.scrollTop+L.clientHeight-20)L.scrollTop=top-L.clientHeight/3;}}
+}
+
+/* ---- side panels ---- */
+function regs(){const c=hero.cpu,cc=c.getCC();
+  $("regs").innerHTML='<span class="hdr">6808 registers</span>'+[["A",hex(c.a,2)],["B",hex(c.b,2)],["X",hex(c.x,4)],["SP",hex(c.sp,4)],["PC",hex(c.pc,4)],["HINZVC",[5,4,3,2,1,0].map(b=>cc>>b&1).join("")]].map(r=>'<span class="k">'+r[0]+'</span><span>'+r[1]+'</span><span></span>').join("");
+  let h='<span class="hdr">Motors (RAM mirror)</span><span class="k">Drive</span><span>'+Math.round(hero.pos[0])+'</span><span class="k">enc</span>';
+  for(let m=1;m<8;m++)h+='<span class="k">'+Hero.MOT[m]+'</span><span>$'+hex(Math.round(hero.pos[m]),2)+'</span><span class="k">$'+hex(m-1,4)+'</span>';
+  h+='<span class="k">Sonar</span><span>'+hex(hero.ram[0x11],2)+' / '+hex(hero.ram[0x10],2)+'</span><span class="k">$0011/10</span>';
+  $("mpos").innerHTML=h;
+  const pill=$("mode-pill"),M={exec:"EXECUTIVE",mon:"MONITOR",exam:"EXAMINE",auto:"AUTOLOAD",util:"UTILITY",halt:"HALTED"};
+  if(hero.mode==="run"){pill.textContent=hero.robot?"ROBOT LANGUAGE":"MACHINE LANGUAGE";pill.className="pill "+(hero.robot?"robot":"machine");}
+  else{pill.textContent=M[hero.mode]||hero.mode.toUpperCase();pill.className="pill";}
+  $("cyc").textContent=hero.cycles.toLocaleString()+" CPU cycles executed";
+}
+function log(m){const L=$("log");const d=document.createElement("div");d.textContent=m;L.appendChild(d);while(L.children.length>60)L.removeChild(L.firstChild);L.scrollTop=L.scrollHeight;}
+hero.listeners.push((t,m)=>{if(t==="log")log(m);else if(t==="speech")$("speech").textContent=m?"🗣 "+m:"";else if(t==="mem")buildListing();});
+
+/* ---- room ---- */
+const cv=$("room"),cx=cv.getContext("2d");
+function fit(){const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.width*380/640*dpr);}
+window.addEventListener("resize",fit);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function draw(){
+  const W=cv.width,k=W/640,w=hero.world;cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,W,cv.height);cx.setTransform(k,0,0,k,0,0);
+  const ink=css("--ink"),acc=css("--accent"),a2=css("--accent2"),grid=css("--grid"),mut=css("--muted"),sur=css("--surface"),wall=css("--wall");
+  cx.strokeStyle=grid;cx.lineWidth=1;for(let x=0;x<=640;x+=40){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,380);cx.stroke();}for(let y=0;y<=380;y+=40){cx.beginPath();cx.moveTo(0,y);cx.lineTo(640,y);cx.stroke();}
+  cx.fillStyle=wall;[[430,110,90,70],[90,60,80,35]].forEach(b=>cx.fillRect(b[0],b[1],b[2],b[3]));
+  cx.strokeStyle=wall;cx.lineWidth=4;cx.strokeRect(2,2,636,376);
+  cx.fillStyle=mut;cx.font="11px JetBrains Mono, monospace";cx.fillText("grid = 1 ft",8,370);
+  if(w.trail.length>1){cx.strokeStyle=a2;cx.lineWidth=2;cx.setLineDash([4,4]);cx.beginPath();w.trail.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.stroke();cx.setLineDash([]);}
+  const ha=hero.headAngle();
+  if(hero.sense.sonar){const d=hero.sonarDistance(),L=Math.min(d,96)/12*40,ang=w.th+ha;cx.strokeStyle=acc;cx.globalAlpha=.55;cx.lineWidth=1.5;cx.setLineDash([2,3]);cx.beginPath();cx.moveTo(w.x,w.y);cx.lineTo(w.x+Math.sin(ang)*L,w.y-Math.cos(ang)*L);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1;}
+  cx.save();cx.translate(w.x,w.y);cx.rotate(w.th);
+  cx.fillStyle=ink;cx.fillRect(-27,6,6,14);cx.fillRect(21,6,6,14);
+  cx.beginPath();for(let i=0;i<8;i++){const a=Math.PI/8+i*Math.PI/4;cx.lineTo(Math.cos(a)*30,Math.sin(a)*30);}cx.closePath();cx.fillStyle=sur;cx.fill();cx.strokeStyle=ink;cx.lineWidth=2.5;cx.stroke();
+  cx.save();cx.translate(0,-18);cx.rotate(hero.steerAngle());cx.fillStyle=acc;cx.fillRect(-3,-8,6,16);cx.restore();
+  cx.save();cx.rotate(ha);cx.beginPath();cx.arc(0,0,20,0,Math.PI*2);cx.fillStyle=sur;cx.fill();cx.stroke();
+  cx.fillStyle=ink;cx.fillRect(-7,-14,14,5);
+  const reach=14+hero.pos[1]/0x98*26*Math.cos(hero.pos[2]/0x86*1.2);
+  cx.strokeStyle=ink;cx.lineWidth=6;cx.beginPath();cx.moveTo(14,-6);cx.lineTo(14,-6-reach);cx.stroke();
+  const op=3+hero.pos[5]/0x75*11;cx.save();cx.translate(14,-6-reach);cx.rotate((hero.pos[3]-0x49)/0x49*1.2);cx.strokeStyle=acc;cx.lineWidth=3;cx.beginPath();cx.moveTo(-op/2,0);cx.lineTo(-op/2,-10);cx.moveTo(op/2,0);cx.lineTo(op/2,-10);cx.stroke();cx.restore();
+  cx.restore();cx.restore();
+}
+
+/* ---- main loop ---- */
+let last=performance.now();
+function frame(now){const dt=(now-last)/1000;last=now;hero.advance(dt);drawSeg();draw();regs();markPC();requestAnimationFrame(frame);}
+fit();showProg();loadProg(current);hero.key("RESET");log("Power on. Pick a program and press Type it for me.");requestAnimationFrame(frame);
+})();
+</script>

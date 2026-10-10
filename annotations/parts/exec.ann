@@ -1,0 +1,986 @@
+# Executive, monitor, keypad, display, utilities and cassette: $E503-$E9E2 and $F423-$F7F4.
+# Behaviour checked by running the ROM in emulator/herohw.js (key presses, display latches).
+
+# ---- RAM used by the executive and monitor ----
+E  CASS_CNT   $0039    # cassette: bytes left in the current record / checksum scratch
+E  CASS_LEN   $003A    # cassette: record length byte
+E  CASS_FROM  $003B    # cassette: "Fr" first address to save (2 bytes)
+E  CASS_LAST  $003D    # cassette: "LA" last address to save (2 bytes)
+E  IDLE_CNT   $0FFC    # executive: idle countdown before the display animation (2 bytes)
+E  IDLE_RATE  $0FFE    # executive: animation step countdown (2 bytes)
+E  ANIM_ADR   $0FF9    # executive: latch address of the walking segment (2 bytes)
+E  ANIM_DIR   $0FFB    # executive: animation direction (0 = going right, $FF = going back)
+E  XSAVE      $0FEE    # X save slot used by the display and keypad routines (2 bytes)
+E  DIGADD     $0FF2    # display pointer: latch address of the next digit (manual's name)
+E  BRKTAB     $0FDD    # breakpoint table base: 4 slots of (saved opcode, address) from $0FE0
+E  MONSP      $0FEC    # monitor's own SP while a Machine Language program runs to a breakpoint
+
+# ---- labels ----
+L  E503  UTIL
+L  E51F  UTILTAB
+L  E53F  UT_INIT
+L  E54D  INIT_PROG
+L  E555  UT_REST
+L  E563  REST_PROG
+L  E572  UT_SAVE
+L  E5A1  TO_RESET
+L  E5A4  UT_LOAD
+L  E5C2  SREC_READ
+L  E60F  SREC_WRITE
+L  E69C  SREC_S1
+L  E6A1  SREC_S9
+L  E6A6  SREC_CRLF
+L  E6A9  SEND_STR
+L  E6BE  SEND_DBYTE
+L  E6CA  SEND_BYTE
+L  E6DD  SEND_HEX2
+L  E6EC  SEND_HEX1
+L  E6F7  SEND_CHAR
+L  E70D  SEND_LEADER
+L  E71D  TAPE_CELL
+L  E725  TAPE_CELLS
+L  E747  TAPE_FLIP
+L  E751  SER_SPACE
+L  E753  SER_CHAR
+L  E778  SER_BIT
+L  E791  GET_HEXSP
+L  E7B0  GET_BYTE
+L  E7CC  GET_CHAR
+L  E858  LEARN
+L  E8EC  MANUAL
+L  E979  LRN_SETUP
+L  E9CA  LRN_ADDR
+L  E9E3  MAN_SETUP
+L  F423  EXEC
+L  F452  EXEC_IDLE
+L  F46F  EXEC_KEY
+L  F477  KEYDISP
+L  F489  SAY_READY
+L  F4A1  PH_READY
+L  F4A7  IDLE_ANIM
+L  F4EF  MON_ML
+L  F4F9  MON_LOOP
+L  F521  MON_RL
+L  F530  OPTROM
+L  F53B  USERKEY9
+L  F541  USERKEYC
+L  F547  USERKEYF
+L  F54B  USERKEY
+L  F55A  MON_BREAK
+L  F586  ASK_DO
+L  F58D  ASK_ADDR
+L  F598  ASK_AD
+L  F5A1  OUTSTR4
+L  F5A7  MON_DO
+L  F5B2  MON_RUN
+L  F5B5  RUN_STEP
+L  F5E5  RUN_ROBOT
+L  F609  BRK_SWAP
+L  F628  BRK_TRAP
+L  F64E  REDIS
+L  F65B  CLRDIS
+L  F669  ASK_ADDR0
+L  F673  SHOW_ADDR
+L  F685  MON_AUTO
+L  F68E  MON_EXAM
+L  F691  MON_FWD
+L  F693  MON_BACK
+L  F696  MON_CHANGE
+L  F6A0  KEYBYTES
+L  F6BE  DIGSKIP
+L  F6CC  MON_X
+L  F6D2  MON_A
+L  F6DA  MON_B
+L  F6E2  MON_PC
+L  F6F9  DSPLAY
+L  F70A  OUTSTR0B
+L  F70B  OUTSTR0
+L  F711  MON_CC
+L  F727  MON_SP
+L  F73C  KEYSCAN
+L  F777  INCH
+L  F77E  KEYUP
+L  F788  KEYPOLL
+L  F78C  KEYDOWN
+L  F796  INHEX2
+L  F7AD  OUTBYT
+L  F7B5  OUTHEX
+L  F7C8  OUTCH
+L  F7CB  OUTCH_X
+L  F7E2  OUTSTR_AT
+L  F7E5  OUTSTR
+L  F93A  HEXSEG
+L  F94A  KEYCODE1
+L  F952  KEYCODE2
+L  F95A  KEYCMDS
+
+# ---- regions and operand overrides ----
+R  E69C E6A0 fcb 8             # "\r\nS1" + 0 : start of an S1 data record
+R  E6A1 E6A5 fcb 8             # "\r\nS9" + 0 : end record
+R  E6A6 E6A8 fcb 8             # "\r\n" + 0
+O  E516  #@E51F-2
+O  F474  #@F95A-2
+O  F7BB  #@F93A-1
+O  F51B  #@F95A+30
+N  E9F5          # LDX #$FFFF: "nothing shown yet" sentinel, not a ROM address
+N  EA3D
+N  EA66
+C  E69C "\r\nS1": carriage return, line feed, then the S1 record type (a 0 ends each string)
+C  E6A1 "\r\nS9": the end-of-file record type
+C  E6A6 "\r\n"
+C  F93A hex digits 0-9 A b C d E F as segment patterns (bit 6 = a ... bit 0 = g)
+C  F94A key codes for the 15 keypad positions (see KEYSCAN)
+C  F95A 32 command routines, pushed and entered with RTS: 16 executive keys, then 16 monitor keys
+
+# ================================================================= utilities (executive key 3)
+H  E503
+;---------------------------------------------------------------
+; UTIL - executive key 3: the utility menu
+;
+; Shows "3." and waits for a second key, echoes it, then runs entry
+; key+1 of UTILTAB with the same RTS dispatch as the executive. Keys
+; 1-8 are used; 0 and 9-F do nothing. In ROM 1.0 there are no RS-232
+; utilities (39, 3A): the owners' FAQ lists those for later ROMs.
+;
+; In:        none (entered by RTS dispatch from EXEC_KEY)
+; Out:       never returns; loops until a utility exits to RESET or EXEC
+;---------------------------------------------------------------
+C  E506 inline string follows: "3."
+C  E50A put the echoed key in digit 2
+C  E510 INCH: wait for a key (A = 0-F)
+C  E513 OUTHEX: show it
+C  E516 table base minus 2: KEYDISP adds 2 per key, plus 2
+C  E519 KEYDISP: push the routine address and RTS to it
+C  E51C a utility that returns comes back to the menu
+C  E51E key 0, 9-F: no utility
+C  E51F 1 init, 2 rest pose, 3 save, 4 load, 5 set time, 6 set date, 7 show time, 8 show date
+
+H  E53F
+;---------------------------------------------------------------
+; UT_INIT - utility 1 (keys 3 1): initialize every motor
+;
+; Points the user PC in the SWI frame at INIT_PROG and enters the
+; Robot Language run loop, so the ROM's own Robot Language program
+; does the work: ZERO, then RETURN TO EXECUTIVE.
+;
+; In:        USERFRAME = monitor's register frame
+; Out:       never returns (runs INIT_PROG)
+;---------------------------------------------------------------
+C  E542 robot PC := INIT_PROG
+C  E54A RUN_STEP: run it in Robot Language
+B  E54D INIT_PROG - Robot Language, run by UT_INIT. The first two lines are 6800 code that the
+B  E54D interpreter executes: if the robot is not already in Robot Language mode, SWI enters it.
+C  E54D TST ROBOTMODE (interpreted)
+C  E550 already in Robot Language: skip the SWI (interpreted)
+C  E552 SWI: switch the interpreter into Robot Language
+H  E555
+;---------------------------------------------------------------
+; UT_REST - utility 2 (keys 3 2): move to the rest pose
+;
+; Same pattern as UT_INIT: runs REST_PROG in Robot Language, which
+; moves every arm motor, the head and the steering to the rest pose
+; with one MOVE ALL.
+;
+; In:        USERFRAME = monitor's register frame
+; Out:       never returns (runs REST_PROG)
+;---------------------------------------------------------------
+B  E563 REST_PROG - Robot Language: TST ROBOTMODE / BNE +1 / SWI, then
+B  E563 MOVE ALL to extend 00, shoulder 00, rotate 4D, pivot 00, gripper 00, head 62, steering 49,
+B  E563 then RETURN TO EXECUTIVE.
+
+H  E572
+;---------------------------------------------------------------
+; UT_SAVE - utility 3 (keys 3 3): save memory to cassette
+;
+; Prompts "Fr." and "LA." for the first and last addresses (two bytes
+; each, keyed in hex), then writes Motorola S1 records with an S9 end
+; record to the cassette output, and restarts through RESET.
+;
+; In:        keys: first address, last address
+; Out:       never returns (JMP RESET)
+; Memory:    writes CASS_FROM, CASS_LAST; toggles POWER bit 0 (tape out)
+;---------------------------------------------------------------
+C  E572 no interrupts while timing the tape signal
+C  E574 power: display only
+C  E57C OUTSTR4: show the prompt at digit 4
+C  E57F inline string: "Fr." (from)
+C  E581 REDIS: home the display pointer
+C  E584 two bytes into CASS_FROM
+C  E589 KEYBYTES: read B bytes from the keypad into X
+C  E58C prompt "LA." (last)
+C  E58F inline string: "LA."
+C  E599 KEYBYTES
+C  E59C B = 8: cassette (a negative B would select the serial output)
+C  E59E SREC_WRITE: send the block as S-records
+C  E5A1 always leave through RESET (the robot was stopped for timing)
+
+H  E5A4
+;---------------------------------------------------------------
+; UT_LOAD - utility 4 (keys 3 4): load memory from cassette
+;
+; Reads S-records from the cassette input until the S9 record, storing
+; each data byte at the address in its record. A checksum error shows
+; "Error." and starts listening again.
+;
+; In:        cassette signal on MOTB bit 7
+; Out:       never returns (RESET on success)
+;---------------------------------------------------------------
+C  E5AE B = 8: cassette timing
+C  E5B0 SREC_READ: C clear = S9 seen, C set = checksum error
+C  E5B5 REDIS
+C  E5BB inline string: "Error."
+
+H  E5C2
+;---------------------------------------------------------------
+; SREC_READ - read S-records until S9
+;
+; Waits for an "S", then a type digit. "1": reads count, address and
+; data bytes, storing the data, and checks the record's checksum.
+; "9": done. Anything else: keep looking.
+;
+; In:        B = 8 (cassette)
+; Out:       C clear = S9 reached, C set = checksum error  (contract)
+; Memory:    writes the loaded bytes; uses CASS_CNT; lights DISP_LEFT while a record loads
+;---------------------------------------------------------------
+C  E5C2 two bytes of stack: the record address is built here
+C  E5C4 GET_CHAR
+C  E5C7 ignore the parity bit
+C  E5C9 "S"?
+C  E5CD GET_CHAR: record type
+C  E5D2 "9": end of file
+C  E5D7 "1": a data record
+C  E5DB activity light: leftmost digit on while a record loads
+C  E5E0 GET_BYTE: count (also starts the checksum in A)
+C  E5E3 GET_BYTE: address high, onto the stack
+C  E5E6 GET_BYTE: address low
+C  E5EE data bytes = count - 3 (address and checksum)
+C  E5F4 GET_BYTE: one data byte, stored at X
+C  E605 GET_BYTE: the checksum byte
+C  E608 a good record sums to $FF; INCA makes it 0
+C  E60B checksum error: C set
+
+H  E60F
+;---------------------------------------------------------------
+; SREC_WRITE - write CASS_FROM..CASS_LAST as S1 records and an S9
+;
+; Sends a leader, then records of up to 16 data bytes ("S1", count,
+; address, data, checksum, each as two ASCII hex digits). The bit timing
+; is done entirely with counted delay loops; the NOPs and the
+; "DECA/BNE" pads balance every path to the same length per bit.
+;
+; In:        B > 0 cassette (B = bit-cell count), B <= 0 serial
+;            CASS_FROM, CASS_LAST = block to save
+; Out:       C clear
+; Cycles:    cycle-exact by design: every path is padded so each bit cell is the same length [hand count]
+;---------------------------------------------------------------
+C  E612 SEND_LEADER: a long run of 1 cells before the first record
+C  E61F bytes remaining = last - from
+C  E632 16 data bytes in this record
+C  E635 count byte = data bytes + 3 (address and checksum)
+C  E63B "\r\nS1"
+C  E641 serial uses the shorter string table entry
+C  E644 SEND_STR
+C  E664 timing pad
+C  E66F DRIVE read: on the serial path this is the receive line (inference)
+C  E688 finished: "\r\nS9" end record
+C  E68E SEND_STR
+C  E698 SEND_LEADER: trailing tone
+
+H  E6A9
+;---------------------------------------------------------------
+; SEND_STR - send a 0-terminated string
+;
+; In:        X = string, B = output mode
+; Out:       X = byte after the terminator
+;---------------------------------------------------------------
+H  E6BE
+;---------------------------------------------------------------
+; SEND_DBYTE - send the byte at X as two hex digits and add it to the checksum
+;
+; In:        X = byte, A = running checksum, B = output mode
+; Out:       A = checksum + byte; X advanced; Z set when X reaches $003D (end of the header)
+;---------------------------------------------------------------
+H  E6DD
+;---------------------------------------------------------------
+; SEND_HEX2 - send A as two ASCII hex digits
+;
+; In:        A = byte, B = output mode
+;---------------------------------------------------------------
+H  E6F7
+;---------------------------------------------------------------
+; SEND_CHAR - send one character
+;
+; Cassette (B > 0): a start cell, eight data cells, then stop cells,
+; each cell a burst of square-wave cycles on POWER bit 0. Serial
+; (B <= 0): goes to SER_CHAR.
+;
+; In:        A = character, B = output mode
+;---------------------------------------------------------------
+H  E70D
+;---------------------------------------------------------------
+; SEND_LEADER - send $6E cells of the 1 tone (a leader before and after the data)
+;
+; In:        B = cell count
+;---------------------------------------------------------------
+H  E71D
+;---------------------------------------------------------------
+; TAPE_CELL - send one bit cell
+;
+; Toggles the tape output B times per cell; when C is set it toggles
+; again in the middle of each half-cycle, doubling the frequency. So a
+; 1 is the high tone and a 0 the low tone, at the same cell length
+; (frequency-shift keying in the style of the Kansas City standard).
+;
+; In:        C = bit, B = cycles per cell
+;---------------------------------------------------------------
+H  E747
+;---------------------------------------------------------------
+; TAPE_FLIP - toggle the bits of A in the power register (bit 0 = tape out)
+;
+; In:        A = bits to toggle
+; Memory:    writes POWER_SH and POWER
+;---------------------------------------------------------------
+H  E751
+;---------------------------------------------------------------
+; SER_SPACE - send a space on the serial path
+;---------------------------------------------------------------
+H  E753
+;---------------------------------------------------------------
+; SER_CHAR - send A as a serial character: start bit, 8 data bits, stop bit
+;
+; After a line feed it sends four NULs as padding for slow terminals.
+; Never reached in the recorded sessions (no utility selects it in ROM 1.0).
+;
+; In:        A = character
+;---------------------------------------------------------------
+H  E791
+;---------------------------------------------------------------
+; GET_HEXSP - read a hex digit from the input, skipping spaces
+;
+; UNREACHED: nothing in ROM 1.0 calls it (a leftover from a serial loader).
+;
+; Out:       A = digit value; C set if not a hex digit
+;---------------------------------------------------------------
+H  E7B0
+;---------------------------------------------------------------
+; GET_BYTE - read two hex digits into a byte, store it at X and add it to the checksum
+;
+; In:        X = destination, A = checksum
+; Out:       A = checksum + byte, X advanced
+;---------------------------------------------------------------
+H  E7CC
+;---------------------------------------------------------------
+; GET_CHAR - read one character from the cassette input
+;
+; Out:       A = character
+;---------------------------------------------------------------
+
+# ================================================================= Learn and Manual entry
+H  E858
+;---------------------------------------------------------------
+; LEARN - executive key 7: record a program from the teaching pendant
+;
+; Asks for the program's start and end addresses, then loops forever:
+; read the pendant, and while the trigger is held, move the selected
+; motor and append Robot Language records (see the helpers from $EA06).
+; Keys pick the sub-mode: F record, B back up, 7 retrace (LRN_KEY).
+;
+; In:        keys: start address, end address; pendant on MOTB
+; Out:       never returns (RESET or ABORT leaves)
+;---------------------------------------------------------------
+C  E858 LRN_SETUP: addresses, prompts, first MOVE ALL record
+C  E8D8 KEYPOLL: a key pressed?
+H  E8EC
+;---------------------------------------------------------------
+; MANUAL - executive key 4: drive the robot from the teaching pendant
+;
+; Loops forever: read the pendant; when the selection changes, stop
+; whatever was moving; while the trigger is held, run the selected arm
+; motor or the drive and steering. Nothing is recorded.
+;
+; In:        pendant on MOTB
+; Out:       never returns
+;---------------------------------------------------------------
+C  E8EC MAN_SETUP: show "4." and clear the motion state
+H  E979
+;---------------------------------------------------------------
+; LRN_SETUP - Learn mode set-up
+;
+; Reads the record pointer (LRN_PTR) and end address (LRN_END) from the
+; keypad, points the user PC at the program so it can be run later,
+; clears the motion state and records a MOVE ALL of the current pose.
+;
+; Out:       LRN_START = first record address
+;---------------------------------------------------------------
+H  E9CA
+;---------------------------------------------------------------
+; LRN_ADDR - show "7." and read a two-byte address into (ADR_VAR)
+;
+; In:        ADR_VAR = where to store it
+;---------------------------------------------------------------
+H  E9E3
+;---------------------------------------------------------------
+; MAN_SETUP - Manual mode set-up: clear the motion state, show "4."
+;---------------------------------------------------------------
+
+# ================================================================= executive
+H  F423
+;---------------------------------------------------------------
+; EXEC - the executive ("ready") loop
+;
+; Every return to the executive lands here. Resets the stack, turns on
+; only the display, waits about 65 ms for the supplies, shows
+; "HEro 1.0" and says "ready", then waits for a key. While no key comes,
+; IDLE_ANIM walks a single lit segment along the display after about
+; a minute. A key runs entry key+1 of KEYCMDS by RTS dispatch, with
+; EXEC's own address left on the stack so a command that returns comes
+; back here.
+;
+; In:        none
+; Out:       never returns
+; Memory:    writes POWER, POWER_SH, IDLE_CNT, IDLE_RATE, ANIM_ADR, ANIM_DIR
+;---------------------------------------------------------------
+C  F42E settling delay: $3FFF passes of DEX/BNE, about 65 ms [hand count]
+C  F434 SAY_READY: "HEro 1.0" and "ready"
+C  F437 idle time before the animation starts
+C  F446 animation starts at the leftmost digit
+C  F44C push EXEC as the return address for every command
+C  F452 KEYPOLL: C set when a key is down
+C  F470 KEYUP: wait for the key to be released (debounced)
+C  F474 command table minus 2
+B  F477 KEYDISP - X steps two bytes per key from the table base; the word found there is pushed
+B  F477 and the RTS below "returns" into the command. A = key on entry; X and A are restored first.
+C  F488 RTS dispatch into the command; also the monitor's "key 0" no-op
+
+H  F489
+;---------------------------------------------------------------
+; SAY_READY - show "HEro 1.0" and say "ready"
+;
+; In:        none
+; Out:       display = H E r o 1. 0
+; Memory:    writes WAITMASK
+;---------------------------------------------------------------
+C  F48C inline string: "HEro1." (the 1 carries the decimal point)
+C  F491 then a "0": the ROM version, 1.0
+C  F493 OUTCH
+C  F496 phoneme string PH_READY
+C  F49A do not wait for the speech to finish
+C  F49D SPEAK_AB: start speaking
+C  F4A1 R EH D E PA0: "ready"
+H  F4A7
+;---------------------------------------------------------------
+; IDLE_ANIM - move the idle animation one step
+;
+; Clears the lit segment and lights the next one: along the bottom of
+; the digits to the right, then back along the top, and so on.
+;
+; Memory:    writes ANIM_ADR, ANIM_DIR, IDLE_RATE, DIGADD; display latches
+;---------------------------------------------------------------
+
+# ================================================================= monitor
+H  F4EF
+;---------------------------------------------------------------
+; MON_ML - executive key 1: the monitor, Machine Language
+;
+; Shows "1." and clears ROBOTMODE, then falls into MON_LOOP.
+;---------------------------------------------------------------
+C  F4F2 inline string: "1."
+H  F4F9
+;---------------------------------------------------------------
+; MON_LOOP - monitor command loop
+;
+; Waits for a key and dispatches it through the second half of KEYCMDS:
+; 1 A, 2 B, 3 PC, 4 X, 5 CC, 6 SP, 7 resume, 8 single step,
+; 9 breakpoint, A autoload, B back, C change, D do, E examine,
+; F forward. Its own address is pushed first, so every command returns
+; to the loop. While showing a memory byte (SAVESP non-zero), F and B
+; step through memory instead of being treated as commands.
+;
+; Out:       never returns
+;---------------------------------------------------------------
+C  F508 INCH
+C  F51B second half of the command table
+H  F521
+;---------------------------------------------------------------
+; MON_RL - executive key A: the monitor, Robot Language
+;
+; Shows "A.", sets ROBOTMODE and falls into MON_LOOP.
+;---------------------------------------------------------------
+C  F524 inline string: "A."
+H  F530
+;---------------------------------------------------------------
+; OPTROM - executive key D: start an optional ROM
+;
+; If the byte at $2000 is $55, jumps to $2001. That is the signature an
+; accessory ROM in socket U417 (mapped at $2000) uses to make itself
+; startable from the keypad.
+;---------------------------------------------------------------
+H  F53B
+;---------------------------------------------------------------
+; USERKEY9 / USERKEYC / USERKEYF - executive keys 9, C, F
+;
+; Run the three bytes at $0030 (key 9), $0033 (key C) or $0036 (key F)
+; in Robot Language. Confirmed in the emulator; the owners' FAQ has 9
+; and F the other way round. RAMINIT puts $3A (return to executive)
+; there, so an unprogrammed key does nothing.
+;---------------------------------------------------------------
+C  F54B set the user PC in the register frame
+C  F557 start the Robot Language run loop
+H  F55A
+;---------------------------------------------------------------
+; MON_BREAK - monitor key 9: set a breakpoint
+;
+; Finds a free slot (address $FFFF) among the four at $0FE0, prompts
+; "br." and reads the address. All four in use: shows "FULL".
+;---------------------------------------------------------------
+C  F572 inline string: " FULL!"
+C  F580 inline string: "br."
+H  F586
+;---------------------------------------------------------------
+; ASK_DO - prompt "do." and read a two-byte address into (X)
+;---------------------------------------------------------------
+H  F598
+;---------------------------------------------------------------
+; ASK_AD - prompt "Ad." and read a two-byte address into (X)
+;---------------------------------------------------------------
+H  F5A1
+;---------------------------------------------------------------
+; OUTSTR4 - display the inline string that follows the call, starting at digit 4
+;---------------------------------------------------------------
+H  F5A7
+;---------------------------------------------------------------
+; MON_DO - monitor key D: run from an address
+;
+; Prompts "do." and puts the address straight into the PC slot of the
+; register frame, then runs it (MON_RUN).
+;---------------------------------------------------------------
+H  F5B2
+;---------------------------------------------------------------
+; MON_RUN / RUN_STEP - monitor key 7 (resume) and the run loop
+;
+; Single-steps the first instruction (so a breakpoint at the start
+; address does not stop it at once), then:
+;  Machine Language: plants SWI ($3F) at each breakpoint address,
+;    saving the original bytes, and RTIs into the program at full
+;    speed. BRK_TRAP catches the SWI.
+;  Robot Language: RSTEP one instruction at a time, comparing the PC
+;    with the four breakpoints between passes.
+;---------------------------------------------------------------
+C  F5B5 SSTEP: run one instruction
+C  F5C2 for each slot: swap the code byte with $3F (SWI)
+C  F5D8 a breakpoint SWI now enters BRK_TRAP
+C  F5E1 switch to the user's stack and registers
+C  F5E4 run the program at full speed
+C  F5E5 RSTEP: one Robot Language instruction
+C  F5EF stop when the PC reaches any of the four breakpoints
+H  F609
+;---------------------------------------------------------------
+; BRK_SWAP - put the original bytes back at the four breakpoint addresses
+;
+; Out:       C set if XSAVE was one of the breakpoint addresses
+;---------------------------------------------------------------
+H  F628
+;---------------------------------------------------------------
+; BRK_TRAP - a planted SWI fired
+;
+; Backs the saved PC up by one (to the breakpoint address), restores
+; the original bytes and shows the address. An SWI that was not a
+; breakpoint is the program's own: enter Robot Language there.
+;---------------------------------------------------------------
+
+# ================================================================= display and keypad
+H  F64E
+;---------------------------------------------------------------
+; REDIS - reset the display pointer to the leftmost digit
+;
+; In:        none
+; Out:       DIGADD = DISP_LEFT
+; Memory:    writes XSAVE, DIGADD
+;---------------------------------------------------------------
+H  F65B
+;---------------------------------------------------------------
+; CLRDIS - blank all six digits and home the display pointer
+;
+; Memory:    writes XSAVE, DIGADD; all display latches
+;---------------------------------------------------------------
+H  F669
+;---------------------------------------------------------------
+; ASK_ADDR0 - prompt "Ad." and read a two-byte address into SAVESP
+;---------------------------------------------------------------
+H  F673
+;---------------------------------------------------------------
+; SHOW_ADDR - show the address in X and the byte there: "AAAA dd"
+;
+; In:        X = address
+; Memory:    writes SAVESP (the address being examined)
+;---------------------------------------------------------------
+H  F685
+;---------------------------------------------------------------
+; MON_AUTO - monitor key A: autoload
+;
+; Reads an address, then accepts bytes forever: each pair of digits is
+; stored and the address advances. RESET leaves.
+;---------------------------------------------------------------
+H  F68E
+;---------------------------------------------------------------
+; MON_EXAM / MON_FWD / MON_BACK - monitor keys E, F and B
+;
+; E reads an address and shows "AAAA dd"; F and B move one byte
+; forward or back and redisplay.
+;---------------------------------------------------------------
+H  F696
+;---------------------------------------------------------------
+; MON_CHANGE - monitor key C: change the byte being shown
+;
+; In:        B = number of bytes (0 = nothing to change)
+;---------------------------------------------------------------
+H  F6A0
+;---------------------------------------------------------------
+; KEYBYTES - read B bytes from the keypad into memory at X
+;
+; Shows dashes for the digits still to come, then reads two hex digits
+; per byte (INHEX2), showing each as it arrives.
+;
+; In:        X = destination, B = number of bytes
+; Out:       X unchanged
+;---------------------------------------------------------------
+H  F6BE
+;---------------------------------------------------------------
+; DIGSKIP - move the display pointer B digits to the right ($20 per digit... see note)
+;
+; DIGADD's low byte steps by $20 per digit here; the latch blocks are $10
+; apart, so this moves two digits per byte. (Each byte takes two digits.)
+;---------------------------------------------------------------
+H  F6CC
+;---------------------------------------------------------------
+; MON_X / MON_A / MON_B / MON_PC - monitor keys 4, 1, 2, 3: show a register
+;
+; Shows "In.", "AccA.", "Accb." or "Pc." and the register's value from
+; the user's register frame. The entry points share code: each falls
+; through INCA/INCB steps that set the frame offset (A) and byte count (B).
+;---------------------------------------------------------------
+H  F6F9
+;---------------------------------------------------------------
+; DSPLAY - show B bytes (1-3) from X as hex
+;
+; In:        X = first byte, B = count
+; Out:       X unchanged
+;---------------------------------------------------------------
+C  F6FC OUTBYT
+H  F70A
+;---------------------------------------------------------------
+; OUTSTR0B / OUTSTR0 - display the inline string after the call at digit 0
+;
+; OUTSTR0B also clears B first (the register-display commands use it).
+;---------------------------------------------------------------
+H  F711
+;---------------------------------------------------------------
+; MON_CC - monitor key 5: show the condition codes as six binary digits (H I N Z V C)
+;---------------------------------------------------------------
+H  F727
+;---------------------------------------------------------------
+; MON_SP - monitor key 6: show the user's stack pointer, "SP." and four digits
+;
+; The value shown is the frame address plus 7: the SP the program had
+; before the SWI pushed its registers.
+;---------------------------------------------------------------
+H  F73C
+;---------------------------------------------------------------
+; KEYSCAN - read the keypad once
+;
+; Reads the three key rows ($C003, $C006, $C005), packs the five
+; active-low key lines of each into a 15-bit pattern and looks it up in
+; KEYCODE1/KEYCODE2. Two keys down at once read as none.
+;
+; Out:       C set and A = key (0-F) when exactly one key is down
+;---------------------------------------------------------------
+H  F777
+;---------------------------------------------------------------
+; INCH - wait for a key and return it
+;
+; Waits for all keys up, then a key down, each confirmed on 127
+; consecutive scans: about 9 ms in Machine Language. Called from Robot
+; Language the interpreter steps through it, about 5 s per key (manual).
+;
+; Out:       A = key (0-F)
+;---------------------------------------------------------------
+H  F77E
+;---------------------------------------------------------------
+; KEYUP - wait until no key has been down for 127 consecutive scans
+;---------------------------------------------------------------
+H  F788
+;---------------------------------------------------------------
+; KEYPOLL / KEYDOWN - KEYPOLL returns at once with C clear if no key is down;
+; otherwise (and KEYDOWN always) waits for a key held for 127 scans
+;
+; Out:       C set and A = key when a key was read
+;---------------------------------------------------------------
+H  F796
+;---------------------------------------------------------------
+; INHEX2 - read two hex keys as one byte, showing each digit
+;
+; Out:       A = byte
+;---------------------------------------------------------------
+H  F7AD
+;---------------------------------------------------------------
+; OUTBYT - show A as two hex digits
+;
+; In:        A = byte, DIGADD = first digit
+; Out:       DIGADD two digits on
+;---------------------------------------------------------------
+H  F7B5
+;---------------------------------------------------------------
+; OUTHEX - show the low nibble of A as a hex digit
+;
+; In:        A = value (bits 3-0), DIGADD = digit
+; Out:       DIGADD one digit on
+;---------------------------------------------------------------
+C  F7BB HEXSEG table minus 1
+H  F7C8
+;---------------------------------------------------------------
+; OUTCH - light one digit with a raw segment pattern
+;
+; Each digit is a 74LS259 latch that takes one segment per write on data
+; bit 0, at 16 consecutive addresses (the latch ignores address bit 3,
+; so only the last 8 writes count). The loop rotates A left through the
+; carry before each write. After 2 + 16 = 18 rotations of the 9-bit
+; ring (A and C), A is back to its original value.
+;
+; In:        A = segments (bit 6 a ... bit 0 g, bit 7 point), DIGADD = digit
+; Out:       DIGADD = next digit to the right
+; Memory:    writes XSAVE, DIGADD; 16 latch addresses
+;---------------------------------------------------------------
+C  F7CF two extra rotations line the bits up with the latch order
+C  F7D4 latch bit 0 of A at this address
+C  F7DA the next digit's latch block is $10 lower
+H  F7E2
+;---------------------------------------------------------------
+; OUTSTR_AT / OUTSTR - display the string that follows the call
+;
+; OUTSTR takes its caller's return address as a pointer to segment
+; patterns, shows them until one has bit 7 (the decimal point) set, and
+; returns to the byte after the string. OUTSTR_AT first sets DIGADD from X.
+;
+; In:        inline string after the JSR
+; Out:       A = 0; returns past the string
+;---------------------------------------------------------------
+C  F7E6 X = return address = the string
+C  F7E8 drop the return address
+C  F7EF bit 7 set: last character
+C  F7F3 "return" past the string
+
+# ================================================================= remaining entry points
+L  E725  TAPE_CELLS
+L  E72D  TAPE_HALF
+L  E730  TAPE_EDGE
+L  E746  TAPE_FLIPN
+L  E78C  SER_GETBIT
+L  E797  HEXDIGIT
+L  E7EF  SER_PUTBIT
+L  E7FE  SER_DELAY
+L  E842  TAPE_PERIOD
+L  E849  TAPE_HALFP
+L  E85B  LRN_LOOP
+L  E8EF  MAN_LOOP
+L  F9A0  UT_SETTIME
+L  F9B0  UT_SETDATE
+L  FA1F  UT_SHOWDATE
+L  FA26  UT_SHOWTIME
+H  E51E
+;---------------------------------------------------------------
+; (UTILTAB entry for keys 0 and 9-F) - no utility: return to the menu
+;---------------------------------------------------------------
+H  E6CA
+;---------------------------------------------------------------
+; SEND_BYTE - alternate entry of SEND_DBYTE that skips the extra serial pad
+;---------------------------------------------------------------
+H  E6EC
+;---------------------------------------------------------------
+; SEND_HEX1 - send the low nibble of A as one ASCII hex digit ("0"-"9", "A"-"F")
+;
+; In:        A = value 0-15, B = output mode
+;---------------------------------------------------------------
+H  E725
+;---------------------------------------------------------------
+; TAPE_CELLS - start a bit cell without the leading delay (first cell of a character)
+;---------------------------------------------------------------
+H  E72D
+;---------------------------------------------------------------
+; TAPE_HALF - wait out A loop passes, then toggle the tape output (inner loop of TAPE_CELL)
+;---------------------------------------------------------------
+H  E730
+;---------------------------------------------------------------
+; TAPE_EDGE - toggle the tape output now, then once more mid-cycle if C is set (a 1 bit)
+;---------------------------------------------------------------
+H  E746
+;---------------------------------------------------------------
+; TAPE_FLIPN - TAPE_FLIP preceded by a NOP: two cycles longer, for timing balance
+;---------------------------------------------------------------
+H  E778
+;---------------------------------------------------------------
+; SER_BIT - work out the serial bit time from the remote/serial select bits
+;
+; Reads $C2A0 (input side), takes bits 3-1 as a rate code and turns it
+; into a delay count in B. Serial output itself goes out on the
+; experimental board port $C220. UNREACHED in ROM 1.0 (no utility
+; selects serial).
+;
+; Out:       B = bit delay
+;---------------------------------------------------------------
+H  E78C
+;---------------------------------------------------------------
+; SER_GETBIT - wait one bit time and sample the serial input (UNREACHED)
+;---------------------------------------------------------------
+H  E797
+;---------------------------------------------------------------
+; HEXDIGIT - convert an ASCII hex digit in A to its value
+;
+; Out:       A = 0-15, C clear; C set if A was not "0"-"9" or "A"-"F"
+;---------------------------------------------------------------
+H  E7EF
+;---------------------------------------------------------------
+; SER_PUTBIT - write the carry as one serial bit on $C220 and wait one bit time (UNREACHED)
+;---------------------------------------------------------------
+H  E7FE
+;---------------------------------------------------------------
+; SER_DELAY - delay for the bit time in B (counted loops; UNREACHED)
+;---------------------------------------------------------------
+H  E842
+;---------------------------------------------------------------
+; TAPE_PERIOD - measure one full cycle of the cassette input
+;
+; The cassette input comes in on $C260 (read). Counts how long the
+; input stays unchanged for each of two half-cycles and compares the
+; count with $1D: a short period is the high tone (a 1), a long one the
+; low tone (a 0).
+;
+; Out:       C = bit (high tone sets C)
+;---------------------------------------------------------------
+H  E849
+;---------------------------------------------------------------
+; TAPE_HALFP - time one half-cycle of the cassette input
+;
+; In:        A = last $C260 reading
+; Out:       A = new reading; C set if the half-cycle was shorter than $1D passes
+;---------------------------------------------------------------
+H  E85B
+;---------------------------------------------------------------
+; LRN_LOOP - Learn mode main loop (re-entered after each pass; see LEARN)
+;---------------------------------------------------------------
+H  E8EF
+;---------------------------------------------------------------
+; MAN_LOOP - Manual mode main loop (re-entered after each pass; see MANUAL)
+;---------------------------------------------------------------
+H  EC82
+;---------------------------------------------------------------
+; (shared RTS) - a bare RTS that nearby code branches to as its exit
+;---------------------------------------------------------------
+H  ED56
+;---------------------------------------------------------------
+; (shared RTS) - a bare RTS that nearby code branches to as its exit
+;---------------------------------------------------------------
+H  F477
+;---------------------------------------------------------------
+; KEYDISP - RTS dispatch: push the word at X + 2*(A+1) and return into it
+;
+; In:        A = key 0-15, X = table base minus 2, XSAVE = X to restore
+; Out:       enters the routine with A = SAVESP, X = XSAVE
+;---------------------------------------------------------------
+H  F488
+;---------------------------------------------------------------
+; (RTS) - KEYCMDS entry for monitor key 0: does nothing, back to MON_LOOP
+;---------------------------------------------------------------
+H  F541
+;---------------------------------------------------------------
+; USERKEYC - executive key C: run the Robot Language bytes at $0033
+;---------------------------------------------------------------
+H  F547
+;---------------------------------------------------------------
+; USERKEYF - executive key F: run the Robot Language bytes at $0036
+;---------------------------------------------------------------
+H  F58D
+;---------------------------------------------------------------
+; ASK_ADDR - home the display and read two bytes from the keypad into (SAVESP)
+;---------------------------------------------------------------
+H  F5B5
+;---------------------------------------------------------------
+; RUN_STEP - the run loop proper (MON_RUN without clearing the display; see MON_RUN)
+;---------------------------------------------------------------
+H  F682
+;---------------------------------------------------------------
+; (tail of SHOW_ADDR) - show B bytes at X through DSPLAY
+;---------------------------------------------------------------
+H  F691
+;---------------------------------------------------------------
+; MON_FWD - monitor key F: show the next byte
+;---------------------------------------------------------------
+H  F693
+;---------------------------------------------------------------
+; MON_BACK - monitor key B: show the previous byte
+;---------------------------------------------------------------
+H  F6D2
+;---------------------------------------------------------------
+; MON_A - monitor key 1: show accumulator A ("AccA.")
+;---------------------------------------------------------------
+H  F6DA
+;---------------------------------------------------------------
+; MON_B - monitor key 2: show accumulator B ("Accb.")
+;---------------------------------------------------------------
+H  F6E2
+;---------------------------------------------------------------
+; MON_PC - monitor key 3: show the program counter ("Pc.")
+;---------------------------------------------------------------
+H  F70B
+;---------------------------------------------------------------
+; OUTSTR0 - display the inline string after the call, starting at the leftmost digit
+;---------------------------------------------------------------
+H  F78C
+;---------------------------------------------------------------
+; KEYDOWN - wait for a key held down for 127 consecutive scans
+;
+; Out:       A = key, C set
+;---------------------------------------------------------------
+H  F7CB
+;---------------------------------------------------------------
+; OUTCH_X - OUTCH without saving X first (callers that saved X themselves)
+;---------------------------------------------------------------
+H  F7E5
+;---------------------------------------------------------------
+; OUTSTR - display the inline string after the call at DIGADD (see OUTSTR_AT)
+;---------------------------------------------------------------
+H  F834
+;---------------------------------------------------------------
+; SS_SHOW - show the user's PC and the byte there (after a single step or a stop)
+;---------------------------------------------------------------
+H  F9A0
+;---------------------------------------------------------------
+; UT_SETTIME - utility 5 (keys 3 5): set the clock time
+;
+; Prompts "HH  SS." and reads six digits (hours, minutes, seconds) into
+; $0064-$0069, then "A P 24." for the mode: D = AM, E = PM, F = 24-hour.
+; Writes the digits into the MSM5832 registers through $C300 (write
+; strobe) with the register number on $C2C0, then restarts via RESET.
+;
+; Memory:    writes $000F/$0010 (register range), $0064-$0069; CLOCK, CTRL
+;---------------------------------------------------------------
+H  F9B0
+;---------------------------------------------------------------
+; UT_SETDATE - utility 6 (keys 3 6): set the date
+;
+; Prompts "yy  dd." and reads six digits (year, month, day) into the
+; clock's date registers, as UT_SETTIME does for the time.
+;---------------------------------------------------------------
+H  FA1F
+;---------------------------------------------------------------
+; UT_SHOWDATE - utility 8 (keys 3 8): show the date from the clock, continuously
+;
+; Reads clock registers $C down to $7 (year, month, day) and shows them
+; as six hex digits, over and over until RESET.
+;---------------------------------------------------------------
+H  FA26
+;---------------------------------------------------------------
+; UT_SHOWTIME - utility 7 (keys 3 7): show the time from the clock, continuously
+;
+; Reads clock registers $5 down to $0 (hours, minutes, seconds); the
+; hours-tens register's AM/PM and 24-hour flag bits are masked off.
+;---------------------------------------------------------------

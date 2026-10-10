@@ -1,0 +1,45 @@
+# HERO 1 ROM v1.0 annotations. Addresses are hex.
+# ---- I/O ports ----
+E  KEYROW2    $C003    # keypad: keys F C 9 6 3 on D0-D4 (active low)
+E  KEYROW1    $C005    # keypad: keys E B 8 5 2
+E  KEYROW0    $C006    # keypad: keys D A 7 4 1 0
+E  DISP_RIGHT $C10F    # display latches: digit 5 at $C11x ... digit 0 at $C16x
+E  DISP_LEFT  $C16F
+E  IRQFLAGS   $C200    # read: interrupt flip-flops; write: clear/enable mask
+E  SONARCNT   $C220    # sonar time-of-flight count
+E  SENSE      $C240    # read: light/sound A/D; write: SC-01 phoneme
+E  MOTA       $C260    # write: steering phases (7-4), pivot/rotate (3-0); read: limit switches, speech request
+E  MOTB       $C280    # write: extend/head (7-4), gripper/shoulder (3-0); read: remote, sleep switch, trigger
+E  DRIVE      $C2A0    # bit 7 reverse, bit 6 on, bits 5-0 speed
+E  CTRL       $C2C0    # bit 7/6 arm motor select, bit 5 speech strobe, bit 4 light/sound, 3-0 clock register
+E  POWER      $C2E0    # bit 6 sleep, 5 sense, 4 display, 3 speech, 2 motion, 1 sonar, 0 tape out
+E  CLOCK      $C300    # MSM5832 control/data
+# ---- tables ----
+R  E03C E0A8 optab           # Robot Interpreter dispatch table
+R  E51F E53E fdb 8           # executive key table
+R  FFF8 FFFF fdb 4           # vectors: IRQ, SWI, NMI, RESET
+# ---- split-byte ROM addresses (low byte / high byte loaded separately) ----
+O  E233  #LO(@E29F)
+O  E235  #HI(@E29F)
+O  E542  #LO(@E54D)
+O  E544  #HI(@E54D)
+O  E558  #LO(@E563)
+O  E55A  #HI(@E563)
+O  F10E  #LO(@F19B)
+O  F110  #HI(@F19B)
+O  F27B  #LO(@F2CC)
+O  F27D  #HI(@F2CC)
+O  F3A2  #LO(@F423)
+O  F3A4  #HI(@F423)
+O  F44C  #LO(@F423)
+O  F44E  #HI(@F423)
+O  F496  #LO(@F4A1)
+O  F498  #HI(@F4A1)
+O  F4FF  #LO(@F4F9)
+O  F501  #HI(@F4F9)
+N  F437          # LDX #$FFFF is a loop count
+R  F91A F939 fcb 8           # 6800 opcode class bitmap (1 bit per opcode)
+R  F93A F949 fcb 8           # hex digit segment patterns 0-F
+R  F94A F959 fcb 8           # keypad decode tables
+R  F95A F999 fdb 8           # key command dispatch (RTS-dispatched)
+R  F99A F99F fcb 8           # unused ($FF)

@@ -1,0 +1,22 @@
+name: verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Check ROM hash
+        run: echo "39e45595efc26a8fcfd7f3dc8e36f7d2b73ce98ee2a999b7089c090c832e1180  HERO.ROM" | sha256sum -c
+      - name: Listing is up to date
+        run: |
+          make listing
+          git diff --exit-code src/hero1.asm
+      - name: Byte-identical rebuild and shift test
+        run: make verify

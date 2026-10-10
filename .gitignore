@@ -1,0 +1,6 @@
+build/*
+!build/regpass.json
+!build/measured.json
+__pycache__/
+*.pyc
+node_modules/

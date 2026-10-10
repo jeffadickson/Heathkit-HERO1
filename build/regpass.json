@@ -1,0 +1,4677 @@
+{
+"E000": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 12,
+"calls": [
+"F83C"
+],
+"callers": [
+"F5A7",
+"F5B2",
+"F5B5",
+"F827"
+],
+"exits": [
+"RTS",
+"calls RAM hook $0012",
+"calls RAM hook $0015",
+"indirect JSR at E02C"
+],
+"complete": true
+},
+"E0A9": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0AD": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0B8": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0BC": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0C0": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0CA": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"X"
+],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0D5": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"X"
+],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0E0": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0E4": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0E8": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "INZV",
+"stack": 2,
+"calls": [
+"E0F2"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E0F2": {
+"changes": [
+"X"
+],
+"partial": [],
+"preserves": [
+"A",
+"B"
+],
+"flags": "INZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"E0A9",
+"E0AD",
+"E0B8",
+"E0BC",
+"E0C0",
+"E0CA",
+"E0D5",
+"E0E0",
+"E0E4",
+"E0E8"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E102": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"F423"
+],
+"callers": [
+"EBD5",
+"EC83",
+"EFB7"
+],
+"exits": [
+"tail-JMP to F423"
+],
+"complete": true
+},
+"E105": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E194"
+],
+"complete": true
+},
+"E109": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E194"
+],
+"complete": true
+},
+"E11B": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E194"
+],
+"complete": true
+},
+"E11F": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E194"
+],
+"complete": true
+},
+"E133": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E194"
+],
+"complete": true
+},
+"E137": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E194"
+],
+"complete": true
+},
+"E15A": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E194"
+],
+"complete": true
+},
+"E15E": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E194"
+],
+"complete": true
+},
+"E194": {
+"changes": [
+"B",
+"X"
+],
+"partial": [],
+"preserves": [
+"A"
+],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E224",
+"E2F7"
+],
+"callers": [
+"E1F6",
+"E1FC",
+"EF47"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E1F6": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 7,
+"calls": [
+"E194"
+],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E1FC"
+],
+"complete": true
+},
+"E1FC": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 7,
+"calls": [
+"E194"
+],
+"callers": [
+"E417"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E224": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "HINZVC",
+"stack": 2,
+"calls": [
+"E291"
+],
+"callers": [
+"E105",
+"E109",
+"E11B",
+"E11F",
+"E133",
+"E137",
+"E15A",
+"E15E",
+"E194"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E291": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"A",
+"B",
+"X"
+],
+"preserves": [],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"E224"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E2F7": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"E105",
+"E109",
+"E11B",
+"E11F",
+"E133",
+"E137",
+"E15A",
+"E15E",
+"E194"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E32F": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"F1F1"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E333": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"F1F1"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E349": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"F1F1"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E34D": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"F1F1"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E35F": {
+"changes": [
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [
+"A"
+],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"F1F1"
+],
+"callers": [
+"F489"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E390": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "INZV",
+"stack": 1,
+"calls": [],
+"callers": [
+"E450"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E399": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "INZV",
+"stack": 1,
+"calls": [],
+"callers": [
+"E450",
+"E8EC",
+"E8EF",
+"EAD2",
+"EF53"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E39D": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "INZV",
+"stack": 1,
+"calls": [],
+"callers": [
+"E450",
+"E858",
+"E85B",
+"E8EC",
+"E8EF",
+"EAD2",
+"EF53"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E3B2": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "INZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"E450"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E3CA": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E3CE": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E3D2": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E3D6": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E411": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E417": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"E1FC"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E450": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 3,
+"calls": [
+"E390",
+"E399",
+"E39D",
+"E3B2"
+],
+"callers": [],
+"exits": [
+"RTS",
+"WAI"
+],
+"complete": true
+},
+"E486": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS",
+"falls into E499"
+],
+"complete": true
+},
+"E499": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"EB4E"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E503": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 9,
+"calls": [
+"F477",
+"F65B",
+"F777",
+"F7B5",
+"F7E5"
+],
+"callers": [],
+"exits": [],
+"complete": true
+},
+"E51E": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E53F": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"F5B5"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F5B5"
+],
+"complete": true
+},
+"E555": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"F5B5"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F5B5"
+],
+"complete": true
+},
+"E572": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 21,
+"calls": [
+"E60F",
+"F37E",
+"F5A1",
+"F64E",
+"F6A0"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F37E"
+],
+"complete": true
+},
+"E5A4": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 1967,
+"calls": [
+"E5C2",
+"F37E",
+"F64E",
+"F7E5"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F37E"
+],
+"complete": true
+},
+"E5C2": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "HNZVC",
+"stack": 1965,
+"calls": [
+"E7B0",
+"E7CC"
+],
+"callers": [
+"E5A4"
+],
+"exits": [
+"RTS"
+],
+"complete": false
+},
+"E60F": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 19,
+"calls": [
+"E6A9",
+"E6BE",
+"E6CA",
+"E6DD",
+"E70D"
+],
+"callers": [
+"E572"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E6A9": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 13,
+"calls": [
+"E6F7",
+"E71D",
+"E725",
+"E72D",
+"E753",
+"E778",
+"E78C"
+],
+"callers": [
+"E60F"
+],
+"exits": [
+"RTS",
+"falls into E6F7",
+"falls into E71D",
+"falls into E753",
+"tail-JMP to E72D"
+],
+"complete": true
+},
+"E6BE": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 17,
+"calls": [
+"E6DD",
+"E751"
+],
+"callers": [
+"E60F"
+],
+"exits": [
+"RTS",
+"falls into E6CA"
+],
+"complete": true
+},
+"E6CA": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 17,
+"calls": [
+"E6DD"
+],
+"callers": [
+"E60F"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E6DD": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"E6EC",
+"E71D",
+"E725",
+"E72D",
+"E753",
+"E778",
+"E78C"
+],
+"callers": [
+"E60F",
+"E6BE",
+"E6CA"
+],
+"exits": [
+"RTS",
+"falls into E6EC",
+"falls into E6F7",
+"falls into E71D",
+"falls into E753",
+"tail-JMP to E72D"
+],
+"complete": true
+},
+"E6EC": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 11,
+"calls": [
+"E71D",
+"E725",
+"E72D",
+"E753",
+"E778",
+"E78C"
+],
+"callers": [
+"E6DD"
+],
+"exits": [
+"RTS",
+"falls into E6F7",
+"falls into E71D",
+"falls into E753",
+"tail-JMP to E72D"
+],
+"complete": true
+},
+"E6F7": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"A",
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 11,
+"calls": [
+"E71D",
+"E725",
+"E72D",
+"E753",
+"E778",
+"E78C"
+],
+"callers": [
+"E6A9"
+],
+"exits": [
+"RTS",
+"falls into E71D",
+"falls into E753",
+"tail-JMP to E72D"
+],
+"complete": true
+},
+"E70D": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "NZVC",
+"stack": 8,
+"calls": [
+"E71D",
+"E725",
+"E72D"
+],
+"callers": [
+"E60F"
+],
+"exits": [
+"falls into E71D",
+"tail-JMP to E72D"
+],
+"complete": true
+},
+"E71D": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "NZV",
+"stack": 4,
+"calls": [
+"E72D"
+],
+"callers": [
+"E6A9",
+"E6DD",
+"E6EC",
+"E6F7",
+"E70D"
+],
+"exits": [
+"tail-JMP to E72D"
+],
+"complete": true
+},
+"E725": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "NZV",
+"stack": 4,
+"calls": [
+"E730"
+],
+"callers": [
+"E6A9",
+"E6DD",
+"E6EC",
+"E6F7",
+"E70D"
+],
+"exits": [
+"tail-JMP to E730"
+],
+"complete": true
+},
+"E72D": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "NZV",
+"stack": 2,
+"calls": [
+"E746",
+"E747"
+],
+"callers": [
+"E6A9",
+"E6DD",
+"E6EC",
+"E6F7",
+"E70D",
+"E71D"
+],
+"exits": [
+"RTS",
+"falls into E730",
+"pulls caller stack"
+],
+"complete": true
+},
+"E730": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "NZV",
+"stack": 2,
+"calls": [
+"E746",
+"E747"
+],
+"callers": [
+"E725"
+],
+"exits": [
+"RTS",
+"falls into E72D",
+"pulls caller stack"
+],
+"complete": true
+},
+"E746": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "NZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"E72D",
+"E730"
+],
+"exits": [
+"RTS",
+"falls into E747"
+],
+"complete": true
+},
+"E747": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "NZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"E72D",
+"E730"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E751": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 11,
+"calls": [
+"E753",
+"E778",
+"E78C"
+],
+"callers": [
+"E6BE"
+],
+"exits": [
+"RTS",
+"falls into E753"
+],
+"complete": true
+},
+"E753": {
+"changes": [
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [
+"A"
+],
+"flags": "HINZVC",
+"stack": 8,
+"calls": [
+"E753",
+"E778",
+"E78C"
+],
+"callers": [
+"E6A9",
+"E6DD",
+"E6EC",
+"E6F7",
+"E751",
+"E753"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E778": {
+"changes": [
+"B"
+],
+"partial": [],
+"preserves": [
+"A",
+"X"
+],
+"flags": "NZVC",
+"stack": 1,
+"calls": [],
+"callers": [
+"E6A9",
+"E6DD",
+"E6EC",
+"E6F7",
+"E751",
+"E753",
+"E7CC"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E78C": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 4,
+"calls": [
+"E7FE"
+],
+"callers": [
+"E6A9",
+"E6DD",
+"E6EC",
+"E6F7",
+"E751",
+"E753"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E797": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"E7B0"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E7B0": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "HNZVC",
+"stack": 10,
+"calls": [
+"E797",
+"E7CC"
+],
+"callers": [
+"E5C2"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E7CC": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 7,
+"calls": [
+"E778",
+"E7EF",
+"E842"
+],
+"callers": [
+"E5C2",
+"E7B0"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E7EF": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 4,
+"calls": [
+"E7FE"
+],
+"callers": [
+"E7CC"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E7FE": {
+"changes": [
+"B"
+],
+"partial": [],
+"preserves": [
+"A",
+"X"
+],
+"flags": "NZV",
+"stack": 1,
+"calls": [],
+"callers": [
+"E78C",
+"E7EF"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E842": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 3,
+"calls": [
+"E849"
+],
+"callers": [
+"E7CC"
+],
+"exits": [
+"RTS",
+"falls into E849"
+],
+"complete": true
+},
+"E849": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 1,
+"calls": [],
+"callers": [
+"E842"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E858": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 19,
+"calls": [
+"E39D",
+"E85B",
+"E979",
+"EA06",
+"EA94",
+"EAC0",
+"EAD2",
+"EB4E",
+"EB73",
+"EBD5",
+"EC83",
+"ED57",
+"ED6D",
+"EDDE",
+"EE42",
+"EF07",
+"F788"
+],
+"callers": [],
+"exits": [
+"falls into E85B",
+"tail-JMP to E85B"
+],
+"complete": true
+},
+"E85B": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"E39D",
+"E85B",
+"EA06",
+"EA94",
+"EAC0",
+"EAD2",
+"EB4E",
+"EB73",
+"EBD5",
+"EC83",
+"ED57",
+"ED6D",
+"EDDE",
+"EE42",
+"EF07",
+"F788"
+],
+"callers": [
+"E858",
+"E85B"
+],
+"exits": [
+"tail-JMP to E85B"
+],
+"complete": true
+},
+"E8EC": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 11,
+"calls": [
+"E399",
+"E39D",
+"E8EF",
+"E9E3",
+"EA35",
+"EA94",
+"ED57",
+"ED6D",
+"EDDE",
+"EE27",
+"EE42"
+],
+"callers": [],
+"exits": [
+"falls into E8EF",
+"tail-JMP to E8EF"
+],
+"complete": true
+},
+"E8EF": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 11,
+"calls": [
+"E399",
+"E39D",
+"E8EF",
+"EA35",
+"EA94",
+"ED57",
+"ED6D",
+"EDDE",
+"EE27",
+"EE42"
+],
+"callers": [
+"E8EC",
+"E8EF"
+],
+"exits": [
+"tail-JMP to E8EF"
+],
+"complete": true
+},
+"E979": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 17,
+"calls": [
+"E9CA",
+"EF7E",
+"F65B",
+"F7E5"
+],
+"callers": [
+"E858"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E9CA": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 15,
+"calls": [
+"F65B",
+"F6A0",
+"F77E",
+"F7E5"
+],
+"callers": [
+"E979"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"E9E3": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 5,
+"calls": [
+"F65B",
+"F7E5"
+],
+"callers": [
+"E8EC"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EA06": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "NZVC",
+"stack": 9,
+"calls": [
+"F7AD",
+"F7C8"
+],
+"callers": [
+"E858",
+"E85B"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EA35": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 9,
+"calls": [
+"EE9A",
+"F7AD",
+"F7C8"
+],
+"callers": [
+"E8EC",
+"E8EF"
+],
+"exits": [
+"RTS",
+"falls into EA3D"
+],
+"complete": true
+},
+"EA3D": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [],
+"flags": "NZVC",
+"stack": 9,
+"calls": [
+"EE9A",
+"F7AD",
+"F7C8"
+],
+"callers": [
+"EB73"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EA94": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"E858",
+"E85B",
+"E8EC",
+"E8EF"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EAC0": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "NZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"E858",
+"E85B"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EAD2": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"A",
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"E399",
+"E39D",
+"EE27",
+"EE9A",
+"EEDE",
+"EF07"
+],
+"callers": [
+"E858",
+"E85B",
+"EB73",
+"EC83"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EB4E": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"A",
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"E499",
+"EF1D"
+],
+"callers": [
+"E858",
+"E85B"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EB73": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"A",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 12,
+"calls": [
+"EA3D",
+"EAD2",
+"EE5A",
+"EFB7",
+"F77E"
+],
+"callers": [
+"E858",
+"E85B"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EBD5": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 11,
+"calls": [
+"E102",
+"EC82",
+"EE7E",
+"EE9A",
+"EF47",
+"EFB7"
+],
+"callers": [
+"E858",
+"E85B"
+],
+"exits": [
+"RTS",
+"falls into EC82",
+"tail-JMP to E102",
+"tail-JMP to EC82"
+],
+"complete": true
+},
+"EC82": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "",
+"stack": 0,
+"calls": [],
+"callers": [
+"EBD5"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EC83": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 11,
+"calls": [
+"E102",
+"EAD2",
+"ED56",
+"EE7E",
+"EE9A",
+"EF47",
+"EFB7"
+],
+"callers": [
+"E858",
+"E85B"
+],
+"exits": [
+"RTS",
+"falls into ED56",
+"tail-JMP to E102",
+"tail-JMP to ED56"
+],
+"complete": true
+},
+"ED56": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "",
+"stack": 0,
+"calls": [],
+"callers": [
+"EC83"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"ED57": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"A",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"EEDE",
+"EF47"
+],
+"callers": [
+"E858",
+"E85B",
+"E8EC",
+"E8EF"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"ED6D": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"EEDE",
+"EF47"
+],
+"callers": [
+"E858",
+"E85B",
+"E8EC",
+"E8EF"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EDDE": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"EE6D",
+"EE9A",
+"EEB3",
+"EF47"
+],
+"callers": [
+"E858",
+"E85B",
+"E8EC",
+"E8EF"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EE27": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "INZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"E8EC",
+"E8EF",
+"EAD2",
+"EF53"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EE42": {
+"changes": [
+"A"
+],
+"partial": [
+"A"
+],
+"preserves": [
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"E858",
+"E85B",
+"E8EC",
+"E8EF"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EE5A": {
+"changes": [
+"X"
+],
+"partial": [],
+"preserves": [
+"A",
+"B"
+],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"EB73"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EE6D": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"EDDE",
+"EE9A"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EE7E": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"EBD5",
+"EC83"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EE9A": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "NZVC",
+"stack": 2,
+"calls": [
+"EE6D"
+],
+"callers": [
+"EA35",
+"EA3D",
+"EAD2",
+"EBD5",
+"EC83",
+"EDDE"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EEB3": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"EDDE"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EEDE": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"EAD2",
+"ED57",
+"ED6D"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EF07": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 7,
+"calls": [
+"EF36",
+"EF53"
+],
+"callers": [
+"E858",
+"E85B",
+"EAD2"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EF1D": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 7,
+"calls": [
+"EF53"
+],
+"callers": [
+"EB4E"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EF36": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"EF07",
+"EF47"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EF47": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 7,
+"calls": [
+"E194",
+"EF36"
+],
+"callers": [
+"EBD5",
+"EC83",
+"ED57",
+"ED6D",
+"EDDE"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EF53": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 5,
+"calls": [
+"E399",
+"E39D",
+"EE27",
+"F65B",
+"F7E5"
+],
+"callers": [
+"EF07",
+"EF1D",
+"EF7E"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EF7E": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 7,
+"calls": [
+"EF53"
+],
+"callers": [
+"E979"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"EFB7": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"E102"
+],
+"callers": [
+"EB73",
+"EBD5",
+"EC83"
+],
+"exits": [
+"RTS",
+"tail-JMP to E102"
+],
+"complete": true
+},
+"EFC9": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 12,
+"calls": [
+"F016",
+"F21C",
+"F24D",
+"F256",
+"F2D9"
+],
+"callers": [],
+"exits": [
+"RTI",
+"calls RAM hook $0018",
+"calls RAM hook $0027",
+"calls RAM hook $002A",
+"calls RAM hook $002D"
+],
+"complete": true
+},
+"F016": {
+"changes": [
+"B",
+"X"
+],
+"partial": [],
+"preserves": [
+"A"
+],
+"flags": "HINZVC",
+"stack": 6,
+"calls": [
+"F074",
+"F0CA",
+"F0EF",
+"F1A3"
+],
+"callers": [
+"EFC9"
+],
+"exits": [
+"RTS",
+"calls RAM hook $001B",
+"calls RAM hook $001E"
+],
+"complete": true
+},
+"F074": {
+"changes": [
+"B"
+],
+"partial": [
+"B"
+],
+"preserves": [
+"A",
+"X"
+],
+"flags": "NZVC",
+"stack": 2,
+"calls": [],
+"callers": [
+"F016"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F0CA": {
+"changes": [
+"A",
+"B"
+],
+"partial": [
+"B"
+],
+"preserves": [
+"X"
+],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"F016"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F0EF": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 3,
+"calls": [
+"F171"
+],
+"callers": [
+"F016"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F171": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"F0EF"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F1A3": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 2,
+"calls": [
+"F20B"
+],
+"callers": [
+"F016",
+"F256",
+"F2B5"
+],
+"exits": [
+"RTS",
+"falls into F1F1",
+"falls into F20B"
+],
+"complete": true
+},
+"F1F1": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 2,
+"calls": [
+"F20B"
+],
+"callers": [
+"E32F",
+"E333",
+"E349",
+"E34D",
+"E35F",
+"F256",
+"F2B5"
+],
+"exits": [
+"RTS",
+"falls into F20B"
+],
+"complete": true
+},
+"F20B": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"F1A3",
+"F1F1"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F21C": {
+"changes": [
+"B",
+"X"
+],
+"partial": [
+"B"
+],
+"preserves": [
+"A"
+],
+"flags": "NZV",
+"stack": 2,
+"calls": [
+"F242"
+],
+"callers": [
+"EFC9"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F242": {
+"changes": [
+"X"
+],
+"partial": [],
+"preserves": [
+"A",
+"B"
+],
+"flags": "NZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"F21C"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F24D": {
+"changes": [
+"B"
+],
+"partial": [],
+"preserves": [
+"A",
+"X"
+],
+"flags": "NZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"EFC9"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F256": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 10,
+"calls": [
+"F1A3",
+"F1F1",
+"F307",
+"F317",
+"F326",
+"F77E",
+"F788",
+"F7E5"
+],
+"callers": [
+"EFC9"
+],
+"exits": [
+"RTS",
+"WAI",
+"calls RAM hook $0021"
+],
+"complete": true
+},
+"F2B5": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 7,
+"calls": [
+"F1A3",
+"F1F1",
+"F317",
+"F326",
+"F77E",
+"F788",
+"F7E5"
+],
+"callers": [
+"F37E"
+],
+"exits": [
+"RTS",
+"WAI",
+"pulls caller stack",
+"resets SP"
+],
+"complete": true
+},
+"F2D9": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 10,
+"calls": [
+"F307",
+"F317",
+"F326",
+"F77E",
+"F788",
+"F7E5"
+],
+"callers": [
+"EFC9"
+],
+"exits": [
+"RTS",
+"calls RAM hook $0024"
+],
+"complete": true
+},
+"F307": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "INZVC",
+"stack": 2,
+"calls": [],
+"callers": [
+"F256",
+"F2D9"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F317": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 5,
+"calls": [
+"F65B"
+],
+"callers": [
+"F256",
+"F2B5",
+"F2D9"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F326": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 7,
+"calls": [
+"F65B"
+],
+"callers": [
+"F256",
+"F2B5",
+"F2D9"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F33A": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 9,
+"calls": [
+"F3AB",
+"F65B",
+"F7AD",
+"F7E5"
+],
+"callers": [],
+"exits": [
+"resets SP"
+],
+"complete": true
+},
+"F37E": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 16,
+"calls": [
+"F2B5",
+"F3AB",
+"F489",
+"F4A7",
+"F5B5",
+"F77E",
+"F788"
+],
+"callers": [
+"E572",
+"E5A4",
+"F9A0",
+"F9B0"
+],
+"exits": [
+"RTS",
+"WAI",
+"falls into F423",
+"falls into F477",
+"falls into F488",
+"resets SP",
+"tail-JMP to F2B5",
+"tail-JMP to F5B5"
+],
+"complete": true
+},
+"F3AB": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [
+"F33A",
+"F37E"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F423": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 9,
+"calls": [
+"F489",
+"F4A7",
+"F77E",
+"F788"
+],
+"callers": [
+"E102"
+],
+"exits": [
+"RTS",
+"falls into F477",
+"falls into F488",
+"resets SP"
+],
+"complete": true
+},
+"F477": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "NZV",
+"stack": 2,
+"calls": [],
+"callers": [
+"E503",
+"F4EF",
+"F521"
+],
+"exits": [
+"RTS",
+"falls into F488"
+],
+"complete": true
+},
+"F488": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F489": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 7,
+"calls": [
+"E35F",
+"F70B",
+"F7C8"
+],
+"callers": [
+"F37E",
+"F423"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F4A7": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "HNZVC",
+"stack": 3,
+"calls": [
+"F7C8"
+],
+"callers": [
+"F37E",
+"F423"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F4EF": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 11,
+"calls": [
+"F477",
+"F65B",
+"F777",
+"F7E5"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F477"
+],
+"complete": true
+},
+"F521": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 11,
+"calls": [
+"F477",
+"F65B",
+"F777",
+"F7E5"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F477"
+],
+"complete": true
+},
+"F530": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"B",
+"X"
+],
+"preserves": [],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS",
+"indirect JMP at F537"
+],
+"complete": true
+},
+"F53B": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"F5B2"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F5B2"
+],
+"complete": true
+},
+"F541": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"F5B2"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F5B2"
+],
+"complete": true
+},
+"F547": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"F5B2"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F5B2"
+],
+"complete": true
+},
+"F55A": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 15,
+"calls": [
+"F58D",
+"F5A1",
+"F70B"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F586": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 13,
+"calls": [
+"F5A1",
+"F64E",
+"F6A0"
+],
+"callers": [
+"F5A7"
+],
+"exits": [
+"falls into F58D",
+"tail-JMP to F6A0"
+],
+"complete": true
+},
+"F58D": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 13,
+"calls": [
+"F64E",
+"F6A0"
+],
+"callers": [
+"F55A"
+],
+"exits": [
+"tail-JMP to F6A0"
+],
+"complete": true
+},
+"F598": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 13,
+"calls": [
+"F5A1",
+"F64E",
+"F6A0"
+],
+"callers": [
+"F669"
+],
+"exits": [
+"falls into F58D",
+"tail-JMP to F6A0"
+],
+"complete": true
+},
+"F5A1": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 1,
+"calls": [
+"F7E2"
+],
+"callers": [
+"E572",
+"F55A",
+"F586",
+"F598"
+],
+"exits": [
+"tail-JMP to F7E2"
+],
+"complete": true
+},
+"F5A7": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 15,
+"calls": [
+"E000",
+"F586",
+"F65B",
+"F673",
+"F834",
+"F83C"
+],
+"callers": [],
+"exits": [
+"RTI",
+"falls into F5B2",
+"falls into F5B5",
+"resets SP",
+"tail-JMP to F673",
+"tail-JMP to F834"
+],
+"complete": true
+},
+"F5B2": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"E000",
+"F65B",
+"F673",
+"F834",
+"F83C"
+],
+"callers": [
+"F53B",
+"F541",
+"F547"
+],
+"exits": [
+"RTI",
+"falls into F5B5",
+"resets SP",
+"tail-JMP to F673",
+"tail-JMP to F834"
+],
+"complete": true
+},
+"F5B5": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"E000",
+"F673",
+"F834",
+"F83C"
+],
+"callers": [
+"E53F",
+"E555",
+"F37E"
+],
+"exits": [
+"RTI",
+"resets SP",
+"tail-JMP to F673",
+"tail-JMP to F834"
+],
+"complete": true
+},
+"F609": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 0,
+"calls": [],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F64E": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "NZV",
+"stack": 0,
+"calls": [],
+"callers": [
+"E572",
+"E5A4",
+"F586",
+"F58D",
+"F598",
+"F65B",
+"F673",
+"F68E",
+"F691",
+"F693",
+"F711",
+"F9A0",
+"F9B0",
+"FA1F",
+"FA26"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F65B": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "NZVC",
+"stack": 3,
+"calls": [
+"F64E",
+"F7C8"
+],
+"callers": [
+"E503",
+"E979",
+"E9CA",
+"E9E3",
+"EF53",
+"F317",
+"F326",
+"F33A",
+"F4EF",
+"F521",
+"F5A7",
+"F5B2"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F669": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 15,
+"calls": [
+"F598"
+],
+"callers": [
+"F685",
+"F68E"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F673": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 12,
+"calls": [
+"F64E",
+"F682",
+"F6F9"
+],
+"callers": [
+"F5A7",
+"F5B2",
+"F5B5",
+"F685",
+"F827",
+"F834"
+],
+"exits": [
+"falls into F682",
+"tail-JMP to F6F9"
+],
+"complete": true
+},
+"F682": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "NZVC",
+"stack": 10,
+"calls": [
+"F6F9"
+],
+"callers": [
+"F673",
+"F68E",
+"F691",
+"F693"
+],
+"exits": [
+"tail-JMP to F6F9"
+],
+"complete": true
+},
+"F685": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 18,
+"calls": [
+"F669",
+"F673",
+"F696"
+],
+"callers": [],
+"exits": [],
+"complete": true
+},
+"F68E": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 17,
+"calls": [
+"F64E",
+"F669",
+"F682",
+"F6F9"
+],
+"callers": [],
+"exits": [
+"falls into F673",
+"falls into F682",
+"falls into F691",
+"falls into F693",
+"tail-JMP to F6F9"
+],
+"complete": true
+},
+"F691": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 12,
+"calls": [
+"F64E",
+"F682",
+"F6F9"
+],
+"callers": [],
+"exits": [
+"falls into F673",
+"falls into F682",
+"falls into F693",
+"tail-JMP to F6F9"
+],
+"complete": true
+},
+"F693": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 12,
+"calls": [
+"F64E",
+"F682",
+"F6F9"
+],
+"callers": [],
+"exits": [
+"falls into F673",
+"falls into F682",
+"tail-JMP to F6F9"
+],
+"complete": true
+},
+"F696": {
+"changes": [
+"X"
+],
+"partial": [
+"X"
+],
+"preserves": [
+"A",
+"B"
+],
+"flags": "HNZVC",
+"stack": 16,
+"calls": [
+"F6A0",
+"F6BE"
+],
+"callers": [
+"F685"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F6A0": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "HNZVC",
+"stack": 13,
+"calls": [
+"F6BE",
+"F796",
+"F7C8"
+],
+"callers": [
+"E572",
+"E9CA",
+"F586",
+"F58D",
+"F598",
+"F696"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F6BE": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 1,
+"calls": [],
+"callers": [
+"F696",
+"F6A0"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F6CC": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 12,
+"calls": [
+"F6F9",
+"F70A"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F6D2": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 12,
+"calls": [
+"F6F9",
+"F70A"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F6DA": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 12,
+"calls": [
+"F6F9",
+"F70A"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F6E2": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 12,
+"calls": [
+"F6F9",
+"F70A"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F6F9": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "NZVC",
+"stack": 10,
+"calls": [
+"F7AD"
+],
+"callers": [
+"F673",
+"F682",
+"F68E",
+"F691",
+"F693",
+"F6CC",
+"F6D2",
+"F6DA",
+"F6E2"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F70A": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 1,
+"calls": [
+"F7E2"
+],
+"callers": [
+"F6CC",
+"F6D2",
+"F6DA",
+"F6E2",
+"F727"
+],
+"exits": [
+"falls into F70B",
+"tail-JMP to F7E2"
+],
+"complete": true
+},
+"F70B": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 1,
+"calls": [
+"F7E2"
+],
+"callers": [
+"F489",
+"F55A",
+"F9A0",
+"F9B0"
+],
+"exits": [
+"tail-JMP to F7E2"
+],
+"complete": true
+},
+"F711": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 6,
+"calls": [
+"F64E",
+"F7B5"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F727": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HNZVC",
+"stack": 9,
+"calls": [
+"F70A",
+"F7AD"
+],
+"callers": [],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F73C": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 2,
+"calls": [],
+"callers": [
+"F77E",
+"F788",
+"F78C",
+"F796"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F777": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 7,
+"calls": [
+"F77E",
+"F78C"
+],
+"callers": [
+"E503",
+"F4EF",
+"F521",
+"F796",
+"F9A0",
+"F9B0"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F77E": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "HNZVC",
+"stack": 4,
+"calls": [
+"F73C"
+],
+"callers": [
+"E9CA",
+"EB73",
+"F256",
+"F2B5",
+"F2D9",
+"F37E",
+"F423",
+"F777"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F788": {
+"changes": [
+"A",
+"B"
+],
+"partial": [
+"B"
+],
+"preserves": [
+"X"
+],
+"flags": "HNZVC",
+"stack": 4,
+"calls": [
+"F73C"
+],
+"callers": [
+"E858",
+"E85B",
+"F256",
+"F2B5",
+"F2D9",
+"F37E",
+"F423"
+],
+"exits": [
+"RTS",
+"falls into F78C"
+],
+"complete": true
+},
+"F78C": {
+"changes": [
+"A",
+"B"
+],
+"partial": [],
+"preserves": [
+"X"
+],
+"flags": "HNZVC",
+"stack": 4,
+"calls": [
+"F73C"
+],
+"callers": [
+"F777"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F796": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "HNZVC",
+"stack": 10,
+"calls": [
+"F73C",
+"F777",
+"F7B5"
+],
+"callers": [
+"F6A0"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F7AD": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 7,
+"calls": [
+"F7B5",
+"F7CB"
+],
+"callers": [
+"EA06",
+"EA35",
+"EA3D",
+"F33A",
+"F6F9",
+"F727"
+],
+"exits": [
+"RTS",
+"falls into F7B5"
+],
+"complete": true
+},
+"F7B5": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 4,
+"calls": [
+"F7CB"
+],
+"callers": [
+"E503",
+"F711",
+"F796",
+"F7AD",
+"F9A0",
+"F9B0",
+"FA1F",
+"FA26"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F7C8": {
+"changes": [
+"A"
+],
+"partial": [],
+"preserves": [
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 1,
+"calls": [],
+"callers": [
+"EA06",
+"EA35",
+"EA3D",
+"F489",
+"F4A7",
+"F65B",
+"F6A0",
+"F7E2",
+"F7E5"
+],
+"exits": [
+"RTS",
+"falls into F7CB"
+],
+"complete": true
+},
+"F7CB": {
+"changes": [
+"A",
+"X"
+],
+"partial": [],
+"preserves": [
+"B"
+],
+"flags": "NZVC",
+"stack": 1,
+"calls": [],
+"callers": [
+"F7AD",
+"F7B5"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F7E2": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 1,
+"calls": [
+"F7C8"
+],
+"callers": [
+"F5A1",
+"F70A",
+"F70B"
+],
+"exits": [
+"falls into F7E5",
+"indirect JMP at F7F3"
+],
+"complete": true
+},
+"F7E5": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 1,
+"calls": [
+"F7C8"
+],
+"callers": [
+"E503",
+"E5A4",
+"E979",
+"E9CA",
+"E9E3",
+"EF53",
+"F256",
+"F2B5",
+"F2D9",
+"F33A",
+"F4EF",
+"F521"
+],
+"exits": [
+"indirect JMP at F7F3"
+],
+"complete": true
+},
+"F7F5": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [
+"A"
+],
+"preserves": [],
+"flags": "NZVC",
+"stack": 1,
+"calls": [],
+"callers": [
+"F83C"
+],
+"exits": [
+"RTS"
+],
+"complete": true
+},
+"F827": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 14,
+"calls": [
+"E000",
+"F673",
+"F83C"
+],
+"callers": [],
+"exits": [
+"falls into F834",
+"tail-JMP to F673"
+],
+"complete": true
+},
+"F834": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "NZVC",
+"stack": 12,
+"calls": [
+"F673"
+],
+"callers": [
+"F5A7",
+"F5B2",
+"F5B5"
+],
+"exits": [
+"tail-JMP to F673"
+],
+"complete": true
+},
+"F83C": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 10,
+"calls": [
+"F7F5"
+],
+"callers": [
+"E000",
+"F5A7",
+"F5B2",
+"F5B5",
+"F827"
+],
+"exits": [
+"RTI",
+"RTS",
+"resets SP",
+"runs into data F8F6"
+],
+"complete": true
+},
+"F9A0": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 16,
+"calls": [
+"F37E",
+"F64E",
+"F70B",
+"F777",
+"F7B5"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F37E"
+],
+"complete": true
+},
+"F9B0": {
+"changes": [
+"A",
+"B",
+"X"
+],
+"partial": [],
+"preserves": [],
+"flags": "HINZVC",
+"stack": 16,
+"calls": [
+"F37E",
+"F64E",
+"F70B",
+"F777",
+"F7B5"
+],
+"callers": [],
+"exits": [
+"tail-JMP to F37E"
+],
+"complete": true
+},
+"FA1F": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 6,
+"calls": [
+"F64E",
+"F7B5"
+],
+"callers": [],
+"exits": [],
+"complete": true
+},
+"FA26": {
+"changes": [],
+"partial": [],
+"preserves": [
+"A",
+"B",
+"X"
+],
+"flags": "NZVC",
+"stack": 6,
+"calls": [
+"F64E",
+"F7B5"
+],
+"callers": [],
+"exits": [],
+"complete": true
+}
+}

@@ -1,0 +1,716 @@
+# Interrupts, 1,024 Hz tick, motor scheduling, drive, speech, sonar, battery, NMI, RESET, sleep: $EFC9-$F422
+# ---- RAM variables ----
+E  ODOMETER    $0009    # drive encoder count since power-up (16-bit; never cleared by the ROM)
+E  BATSLEEP    $000F    # $FF = sleeping because of a logic-battery warning (also scratch in clock set $F9A0-$FA4A)
+E  SONARHITS   $0010    # sonar echoes received (incremented per echo; also scratch in clock set)
+E  SONARRANGE  $0011    # last sonar range count read from $C220
+E  HK_IRQ      $0018    # RAM hook: JSR at IRQ entry, A = $C200 flags (default RTS)
+E  HK_TICK     $001B    # RAM hook: JSR every 1,024 Hz tick (default RTS)
+E  HK_DRIVE    $001E    # RAM hook: JSR every tick while BUSY bit 0 is set (default RTS)
+E  HK_LOGLO    $0021    # RAM hook: logic battery low; return C=1 to run the ROM handler (default SEC,RTS)
+E  HK_MOTLO    $0024    # RAM hook: motor battery low; return C=1 to run the ROM handler (default SEC,RTS)
+E  VEC_MOTION  $0027    # user vector: motion detector interrupt (default RTS)
+E  VEC_TRIG    $002A    # user vector: pendant trigger interrupt (default RTS)
+E  VEC_EXP     $002D    # user vector: experimental board interrupt (default RTS)
+E  MOTA_SH     $0EFF    # shadow of the last byte written to MOTA $C260
+E  IRQMASK     $0F04    # interrupt enable mask rewritten to $C200 at every IRQ
+E  SPKLIM      $0F17    # holds $0F03: first address below the speech call stack (overflow mark)
+E  SPKSP       $0F19    # current speech stack slot (0 = not speaking); the slot holds the phoneme pointer
+E  CB_PTR      $0F52    # $F0EF: address of the control block being stepped
+E  BATSP       $0F56    # stack pointer saved by the logic-battery handler before it sleeps
+# ---- labels ----
+L  EFC9 IRQ
+L  EFD9 IRQ_ACK
+L  F016 TICK
+L  F074 DRVRAMP
+L  F090 DRV_DECEL
+L  F09B DRV_ACCEL
+L  F0A4 DRV_OUT
+L  F0CA STEERHOLD
+L  F0EF CHSTEP
+L  F162 CH_LIMIT
+L  F16A CH_STOP
+L  F171 PHASEOUT
+L  F19B PHASETAB
+L  F1A3 SPEECH
+L  F1AD SPK_FETCH
+L  F1BD SPK_END
+L  F1D2 SPK_RET
+L  F1DF SPK_NOTFF
+L  F1F1 SPK_PUSH
+L  F1FA SPK_OUT
+L  F20B SPK_ADV
+L  F21C ENCODER
+L  F23B ENC_COUNT
+L  F242 ODO_BUMP
+L  F24D SONAR
+L  F256 LOGIC_LOW
+L  F262 LGLO_LOOP
+L  F2B5 LGLO_WAKE
+L  F2BA LGLO_ACK
+L  F2CC LOWVOLT_PH
+L  F2D9 MOTOR_LOW
+L  F307 PWR_SAVE
+L  F317 PWR_DISP
+L  F326 PWR_REST
+L  F33A NMI
+L  F37C NMI_HANG
+L  F37E RESET
+L  F397 WAKE_DONE
+L  F3AB HWINIT
+L  F3DB RAMINIT
+L  F3FA RAMI_FILL
+# ---- regions / operands ----
+R  F2CC F2D8 phon 13         # "low voltage" phoneme list spoken by LOGIC_LOW
+N  F291                      # LDX #$FFFF is a loop count, not a ROM address
+N  F35F                      # LDX #$FFFF is a loop count
+
+# =====================================================================
+H  EFC9
+;---------------------------------------------------------------
+; IRQ - interrupt dispatcher (IRQ vector $FFF8)
+;
+; Reads all eight flip-flops from IRQFLAGS once, acknowledges them, then
+; services each set flag in a fixed order: sonar, drive encoder, 1,024 Hz
+; tick, logic battery low, motor battery low, then the three user vectors
+; (motion $0027, trigger $002A, experimental $002D). A holds the flag byte
+; throughout; every service routine preserves A.
+;
+; Acknowledge: writing $C200 resets each flip-flop whose bit is 0 and
+; enables those whose bit is 1. The ROM writes $01 (reset everything except
+; sonar, so an echo arriving after the read is not lost) and then IRQMASK.
+; Only when sonar was serviced is it reset too (CLR at $EFD6). A non-sonar
+; flag that sets between the read and the $01 write is lost.
+;
+; Interrupt masking: the CPU enters with I=1, but TICK executes CLI at $F034,
+; so when a tick was pending everything after it (battery handlers and the
+; three user vectors) runs with interrupts enabled (follows from the code;
+; the manual says the vectors run masked).
+;
+; In:        IRQFLAGS, IRQMASK
+; Memory:    writes IRQFLAGS; calls HK_IRQ, VEC_MOTION, VEC_TRIG, VEC_EXP
+;---------------------------------------------------------------
+C  EFC9 A = pending flags (bit set = request)
+C  EFCC hook HK_IRQ: user code may inspect or edit A (default RTS)
+C  EFCF bit 0: sonar echo/timeout?
+C  EFD3 SONAR: store range in SONARRANGE, count the hit
+C  EFD6 reset the sonar flip-flop (all bits 0 = all reset)
+C  EFD9 $01: reset every flip-flop except sonar
+C  EFDE then re-enable the sources in IRQMASK
+C  EFE4 bit 6: drive wheel encoder pulse?
+C  EFE8 ENCODER: count distance and odometers
+C  EFEB bit 4: 1,024 Hz clock tick?
+C  EFEF TICK: motor stepping, drive ramp, speech (leaves I=0)
+C  EFF2 bit 3: logic battery low?
+C  EFF6 LOGIC_LOW: warn, speak, maybe sleep, wait for a key
+C  EFF9 bit 2: motor battery low?
+C  EFFD MOTOR_LOW: stop drive, show "dr Lo.", wait for a key
+C  F000 bit 1: motion detector?
+C  F004 user motion vector (default RTS)
+C  F007 bit 5: pendant trigger?
+C  F00B user trigger vector (default RTS)
+C  F00E bit 7: experimental board?
+C  F012 user experimental vector (default RTS)
+
+# =====================================================================
+H  F016
+;---------------------------------------------------------------
+; TICK - 1,024 Hz real-time-clock service
+;
+; Per-tick schedule (one tick = 976.6 us = 874 E cycles):
+;   every tick:  TICKS += 1; JSR HK_TICK
+;                if BUSY bit 4 (ramp): DRVRAMP - it moves the drive speed one
+;                  step up only on ticks where TICKS & $1F = 0 (every 32 ticks,
+;                  31.25 ms) and one step down only where TICKS & $03 = 0
+;                  (every 4 ticks); it rewrites DRIVE every tick
+;                if BUSY bit 0 (drive): JSR HK_DRIVE
+;                STEERHOLD: steering coils held or released while idle
+;                CLI - from here on encoder/sonar interrupts may nest
+;                if BUSY bit 1: decrement CCB_STEER+7; on zero CHSTEP (one phase
+;                  step every N ticks, N = 2..7 by motor and speed, see $F0EF)
+;                if BUSY bit 2: the same for CCB_ARM
+;                if BUSY bit 3: SPEECH (feeds one phoneme when the SC-01 asks)
+; A finished channel returns C=1 and its BUSY bit is cleared here.
+; Emulator: logged $C260/$C280 writes every 3 ticks for medium steering,
+; $C2A0 +1 every 32 ticks while accelerating and -1 every 4 ticks while
+; stopping; worst-case IRQ time with drive+steering+arm+speech was 652
+; cycles, under the 874-cycle tick, so the tick never re-entered itself.
+;
+; In:        BUSY, TICKS
+; Out:       A preserved                                       (contract)
+; Memory:    TICKS, BUSY; see DRVRAMP, STEERHOLD, CHSTEP, SPEECH
+;---------------------------------------------------------------
+C  F017 bump the tick counter; B = new count, used by DRVRAMP
+C  F01E hook HK_TICK (default RTS; must preserve B or the ramp timing shifts)
+C  F023 bit 4: drive ramp running?
+C  F027 DRVRAMP: step DRIVE toward DRVTARGET
+C  F02A bit 0: drive distance still counting?
+C  F02E hook HK_DRIVE (default RTS)
+C  F031 STEERHOLD: hold/release steering coils when steering is idle
+C  F034 interrupts on: encoder and sonar can now nest inside the tick
+C  F035 A = steering busy bit
+C  F03B steering control block
+C  F03E step prescaler expired?
+C  F042 CHSTEP: one phase step; C=1 when the move is over (A comes back = ~$02)
+C  F047 clear the steering busy bit
+C  F04B A = arm channel busy bit
+C  F051 arm control block
+C  F054 step prescaler expired?
+C  F058 CHSTEP: one phase step; C=1 when done (A = ~$04)
+C  F05D clear the arm busy bit
+C  F061 speech busy?
+C  F067 SPEECH: feed the SC-01; C=1 when the utterance is finished
+C  F06E clear the speech busy bit
+
+# =====================================================================
+H  F074
+;---------------------------------------------------------------
+; DRVRAMP - ramp the drive motor one step toward its target
+;
+; DRIVE byte: bit 7 reverse, bit 6 on, bits 5-0 speed; $3F/$BF = off.
+; Speeding up (same direction, |current| < |target|) adds 1 only when
+; TICKS & $1F = 0: one step per 32 ticks, $40 -> $7F in about 2 s.
+; Slowing down, or any direction change, subtracts 1 when TICKS & 3 = 0
+; (every 4 ticks, about 250 ms from full speed). A direction change
+; therefore runs down to off ($3F), takes the new direction bit there and
+; then ramps up. When the output reaches off and ABORTREQ bit 0 is set
+; the stop is complete: BUSY and ABORTREQ bits 0 and 4 are cleared.
+; DRIVE is rewritten on every call, even when nothing changed.
+;
+; In:        B = TICKS (from TICK); DRVNOW, DRVTARGET, ABORTREQ
+; Out:       A preserved                                       (contract)
+; Memory:    DRVNOW, DRIVE port, BUSY/ABORTREQ bits 0 and 4
+;---------------------------------------------------------------
+C  F075 target
+C  F078 already there? just refresh the port
+C  F07E direction bits differ (N set)?
+C  F081 yes: slow down first
+C  F083 compare magnitudes (bits 6-0)
+C  F08D current < target (C set): speed up
+C  F090 B = tick count again
+C  F091 slow down only on every 4th tick
+C  F098 one step slower
+C  F09C speed up only on every 32nd tick
+C  F0A3 one step faster
+C  F0A4 B = magnitude of the new output
+C  F0A7 above $3F means the motor is on (bit 6)
+C  F0AB motor is off: was a stop requested?
+C  F0B1 stop done: clear request bits 0 and 4
+C  F0B7 and the drive busy/ramp bits
+C  F0BB off, but already showing the target's direction bit
+C  F0C2 remember the output
+C  F0C5 and drive the motor
+
+# =====================================================================
+H  F0CA
+;---------------------------------------------------------------
+; STEERHOLD - steering coils while the steering motor is idle
+;
+; With steering idle (BUSY bit 1 clear): while the drive is busy or
+; ramping (BUSY bits 0/4) the steering phases are held at ~$66 = $9_ (the
+; steering's phase-0 pattern), which locks the wheel straight against the
+; drive torque; otherwise they are released ($F_, the steering driver is
+; active low). The low nibble (pivot/rotate) is kept from MOTA_SH.
+; Emulator: $C260 high nibble goes $F -> $9 when a drive starts and back
+; to $F when it ends.
+;
+; In:        BUSY, MOTA_SH
+; Memory:    MOTA (port), MOTA_SH
+;---------------------------------------------------------------
+C  F0CC drive busy or ramping?
+C  F0D0 steering moving: its own phases are on the port
+C  F0D4 hold pattern: ~$66 = $99 (inverted like all steering patterns)
+C  F0DA steering moving: leave it alone
+C  F0DE release: all four steering lines high
+C  F0E0 keep the steering nibble
+C  F0E2 plus the pivot/rotate nibble now on the port
+
+# =====================================================================
+H  F0EF
+;---------------------------------------------------------------
+; CHSTEP - advance one stepper channel by one phase step
+;
+; Channel control block (12 bytes, at CCB_STEER $0EE4 and CCB_ARM $0EF0; +0..+6
+; copied from the motor's descriptor at $E2AA by $E224):
+;   +0     phase mask on the port ($F0 high nibble, $0F low nibble)
+;   +1     steps-per-unit mask ($1F = 32, $07 = 8, $03 = 4 phase steps)
+;   +2,+3  port address (MOTA $C260 or MOTB $C280)
+;   +4,+5  address of the motor's position byte ($0000-$0006)
+;   +6     limit-switch mask for MOTA input bits (e.g. head $12, steering $48)
+;   +7     step prescaler, counted down by TICK
+;   +8     prescaler reload = ticks per step (descriptor byte 8/9/10 for
+;          speed 1/2/3, e.g. steering 6/3/2 = 171/341/512 steps/s; speed 0,
+;          undocumented, reloads from byte 7 (the select byte): $80 = 128,
+;          $40 = 64, $00 = 256 ticks per step; head at speed 0 stepped every
+;          128 ticks in the emulator)
+;   +9     bit 2 = direction (1 = position decreasing), bits 1-0 = phase index
+;   +10,11 phase steps still to go (16-bit, = units << log2(steps per unit))
+; Each call: stop if the count is 0; stop if a limit switch for the current
+; direction is closed (bits 6-4 when decreasing, 3-1 when increasing; a
+; decreasing-side switch also re-zeroes the position byte); else output
+; PHASETAB[+9], advance the index, decrement the count, and on every unit
+; boundary (count & mask = 0) INC/DEC the position byte. An abort request
+; (ABORTREQ bit = channel bit) is honoured only at a unit boundary, by
+; zeroing the count, so the position byte stays exact.
+;
+; In:        X = control block; A = channel's BUSY bit ($02 or $04)
+; Out:       C=0 still moving; C=1 finished, A = ~bit (mask to clear BUSY)
+; Memory:    CB_PTR, block +7/+9/+10/+11, position byte, ABORTREQ, port
+;---------------------------------------------------------------
+C  F0EF remember the block
+C  F0F2 save the channel bit
+C  F0F3 steps left = 0?
+C  F0F7 yes: release coils and report done
+C  F0F9 limit switches are active low: invert
+C  F0FD keep this motor's switches
+C  F0FF A = direction/phase index
+C  F101 decreasing?
+C  F105 decreasing-side switches (steer CW, arm up, head CCW)
+C  F109 increasing-side switches (steer CCW, arm down, head CW)
+C  F10B a switch is closed: stop
+C  F10D B:A = PHASETAB + index (16-bit add)
+C  F112 build the pointer in $0F54
+C  F11B phase pattern for this step
+C  F11D PHASEOUT: put the pattern on this motor's nibble
+C  F11F X = block again
+C  F124 B = direction bit
+C  F127 next phase, wrapping 0-3
+C  F12A same direction
+C  F12D count -= 1 (16-bit)
+C  F139 B = channel bit
+C  F13A low count bits all zero = one whole position unit done
+C  F13E A = direction
+C  F140 X = position byte
+C  F146 decreasing: position - 1
+C  F14A increasing: position + 1
+C  F14C X = block
+C  F14F abort requested for this channel?
+C  F153 yes: drop the request
+C  F158 and the remaining count (next call stops)
+C  F15C restart the prescaler
+C  F160 C=0: still running
+C  F162 limit hit: on the decreasing side?
+C  F166 yes: the motor is at its zero end, position = 0
+C  F16A pattern 0 = coils released (steering: inverted to $F)
+C  F16B PHASEOUT
+C  F16D A = channel bit
+C  F16E A = mask that clears it
+C  F16F C=1: finished
+
+# =====================================================================
+H  F171
+;---------------------------------------------------------------
+; PHASEOUT - write a phase pattern to the current channel's port nibble
+;
+; Steering ($C260 high nibble) is driven inverted: its pattern is
+; complemented first, so "0 = released" becomes $F. For MOTA the other
+; nibble is merged from MOTA_SH under SEI so the steering and pivot/rotate
+; channels never overwrite each other. For MOTB the other nibble is
+; written as 0 (only one arm channel runs at a time). Ends with CLI.
+;
+; In:        A = pattern (both nibbles), CB_PTR = control block
+; Memory:    port, MOTA_SH; leaves I=0
+;---------------------------------------------------------------
+C  F174 B = nibble mask
+C  F176 X = port
+C  F17B steering (MOTA, high nibble)?
+C  F181 yes: invert the pattern
+C  F185 keep this motor's nibble
+C  F18E B = the other nibble's mask
+C  F18F masked: read-modify-write of the shadow
+C  F190 other channel's nibble
+C  F194 update the shadow
+C  F197 output
+C  F199 interrupts back on (also when called with I=0)
+
+H  F19B
+;---------------------------------------------------------------
+; PHASETAB - stepper phase patterns (same pattern in both nibbles)
+;
+; Index 0-3 (position increasing): $66 $55 $99 $AA -> nibbles 6 5 9 A.
+; Index 4-7 (decreasing):          $66 $AA $99 $55 -> nibbles 6 A 9 5.
+; Two-coil full stepping (coil A on bits 3/2, B on bits 1/0). Steering gets
+; the complement (9 A 6 5 / 9 5 6 A). Every move starts at index 0, so
+; moves of whole units (multiples of 4 phases) chain seamlessly; after a
+; direction reversal the first pattern is one phase off (emulator: head
+; ended 1 phase step = 1/32 unit off, not cumulative).
+;---------------------------------------------------------------
+
+# =====================================================================
+H  F1A3
+;---------------------------------------------------------------
+; SPEECH - phoneme sequencer, one phoneme per SC-01 request
+;
+; Speech lists are phoneme bytes (bits 7-6 inflection, 5-0 phoneme) ending
+; in $FF. $BF hi lo calls another list (SPEAK's "jump when speaking" is a
+; call): a new slot is pushed on a call stack of 2-byte slots holding
+; list pointers, from SPK_BASE ($0F13) down to $0F05 - the outer list plus 7
+; nested calls; a call that would use SPKLIM ($0F03) ends the whole
+; utterance instead (emulator: a self-calling list spoke its first phoneme
+; 8 times, then stopped; M-call-A-call-O nesting returned correctly). $FF in a called list pops and skips the 3-byte $BF in the
+; caller. $FF and $BF can never be spoken (they are STOP with inflection).
+; Handshake: MOTA bit 0 = 1 when the SC-01 wants a phoneme; the phoneme
+; goes to SENSE $C240 and CTRL bit 5 is pulsed high and back to latch it.
+;
+; In:        SPKSP, SPK_BASE, SPKLIM, MOTA bit 0
+; Out:       C=0 still speaking; C=1 finished (speech power turned off)
+; Memory:    SPKSP, the slots, SENSE, CTRL, POWER, POWER_SH; may leave I=1
+;---------------------------------------------------------------
+C  F1A3 SC-01 asking for a phoneme (A/R high)?
+C  F1A8 no: nothing to do, C=0
+C  F1AA X = current slot
+C  F1AD X = list pointer from the slot
+C  F1AF next byte
+C  F1B1 end of list?
+C  F1B5 at the bottom slot?
+C  F1BD done: mark not speaking
+C  F1C3 masked: speech power off (POWER bit 3)
+C  F1D0 C=1: utterance finished
+C  F1D2 pop to the caller's slot
+C  F1D7 SPK_ADV x3: skip the caller's $BF hi lo
+C  F1DD fetch the caller's next byte now
+C  F1DF $BF = call another list?
+C  F1E3 A = low, B = high byte of the called list
+C  F1E7 push a slot
+C  F1EC stack full: end the whole utterance
+C  F1F1 (entry SPK_PUSH) slot <- list pointer
+C  F1F8 fetch its first byte
+C  F1FA phoneme to the SC-01 data latch
+C  F1FD masked (no CLI follows: I stays set until the caller's RTI/CLI)
+C  F202 CTRL bit 5 high: strobe
+C  F208 and low again
+C  F20E step the slot's pointer by one (16-bit)
+C  F21A C=0: still speaking
+
+H  F1F1
+;---------------------------------------------------------------
+; SPK_PUSH - start an utterance (entry inside SPEECH's $BF handler)
+;
+; With X = SPK_BASE contents this puts the list address in the bottom slot
+; and immediately outputs its first phoneme without waiting for the
+; SC-01's request; later phonemes are fed by SPEECH on request.
+;
+; In:        X = slot ($0F13 from SPK_BASE), A = list low, B = list high
+; Out:       C=0 speaking (caller sets BUSY bit 3); C=1 list was empty
+; Memory:    SPKSP, the slot; see SPEECH
+;---------------------------------------------------------------
+
+H  F20B
+;---------------------------------------------------------------
+; SPK_ADV - advance the current slot's list pointer by one byte
+;
+; In:        SPKSP
+; Out:       C=0; X = SPKSP slot address                       (contract)
+; Memory:    the slot word
+;---------------------------------------------------------------
+
+# =====================================================================
+H  F21C
+;---------------------------------------------------------------
+; ENCODER - drive wheel encoder pulse
+;
+; Counts DRVDIST down; on a pulse that arrives with DRVDIST already 0 and
+; the drive busy, it ends the move: BUSY bit 0 cleared at once (the robot
+; program continues), stop requested (ABORTREQ bit 0) and DRVTARGET = $3F so
+; DRVRAMP ramps the motor down. Every pulse, busy or not, bumps DRVCOUNT and
+; ODOMETER. Emulator: a move of $040 counts stopped at DRVCOUNT = 64 and the
+; ramp-down coasted 5 more counts (DRVCOUNT = 69 at rest).
+;
+; In:        DRVDIST, BUSY
+; Out:       A preserved                                       (contract)
+; Memory:    DRVDIST, BUSY, ABORTREQ, DRVTARGET, DRVCOUNT, ODOMETER
+;---------------------------------------------------------------
+C  F21C distance left
+C  F21F still counting
+C  F221 reached: is a drive move active?
+C  F227 request the stop (DRVRAMP finishes it)
+C  F22D distance done: drive no longer busy
+C  F233 target = off
+C  F238 ODO_BUMP
+C  F23B one count less
+C  F23F ODO_BUMP
+
+H  F242
+;---------------------------------------------------------------
+; ODO_BUMP - add one to DRVCOUNT and ODOMETER
+;
+; Memory:    DRVCOUNT, ODOMETER
+;---------------------------------------------------------------
+
+H  F24D
+;---------------------------------------------------------------
+; SONAR - sonar echo (or counter overflow): latch the range
+;
+; Range count = 32 kHz clock periods from ping to echo (theory chapter).
+;
+; Out:       A preserved                                       (contract)
+; Memory:    SONARRANGE, SONARHITS
+;---------------------------------------------------------------
+C  F24D time-of-flight count
+C  F252 one more echo
+
+# =====================================================================
+H  F256
+;---------------------------------------------------------------
+; LOGIC_LOW - logic battery low warning
+;
+; Unless HK_LOGLO returns C=0, stops the drive, masks every interrupt,
+; shows "LG Lo." and says "low voltage" (polling SPEECH itself, since no
+; ticks run). Then waits about 10 s ($FFFF key polls) for a key. With the
+; sleep switch at Normal it repeats the warning; at Sleep it sleeps 4
+; periods (40 s) with BATSLEEP = $FF and SP saved in BATSP; the wake-up
+; RESET resumes at LGLO_WAKE on the same stack, so the warning repeats every
+; ~50 s (confirmed in the emulator). A key press disables this interrupt
+; (IRQMASK = $F7), restores drive and power and returns.
+; Problems found in the emulator: (1) after a sleep, RESET's HWINIT has
+; cleared BUSY, so the restored drive byte keeps the motor running with no
+; ramp or distance control (drive stayed $7F indefinitely); (2) BATSLEEP is
+; never cleared except by RAMINIT, so a later SLEEP (87) by a robot program
+; wakes into this warning instead of resuming the program.
+;
+; In:        A = IRQ flags (kept)
+; Out:       A preserved                                       (contract)
+; Memory:    IRQMASK, IRQFLAGS, BUSY bit 3, BATSLEEP, SLEEPCNT, BATSP,
+;            DRIVE, POWER, display, speech
+;---------------------------------------------------------------
+C  F256 hook HK_LOGLO: C=1 (default) = let the ROM handle it
+C  F259 C=0: user handled it
+C  F25C keep the IRQ flags
+C  F25D PWR_SAVE: masked, drive off, A = power, B = drive byte
+C  F260 saved power and drive under the flags
+C  F262 PWR_DISP: power = display only, settle, clear display
+C  F265 OUTSTR: show the inline string
+C  F26D all interrupts off (no ticks while warning)
+C  F270 power: display + speech
+C  F275 ~90 ms for the speech board to power up
+C  F27F X = bottom speech slot
+C  F282 SPK_PUSH: start "low voltage"
+C  F285 SPEECH: poll it directly until done
+C  F28A (SPEECH turned speech power off)
+C  F28B speech no longer busy
+C  F291 about 10 s of key polling
+C  F294 key pressed (debounced)?
+C  F297 yes: acknowledge
+C  F29C sleep switch at Normal?
+C  F2A1 yes: warn again
+C  F2A3 mark "battery sleep"
+C  F2A7 sleep 4 periods of 10 s
+C  F2AC the stack survives in battery-backed RAM
+C  F2AF power = sleep only: +5 V goes off
+C  F2B4 park; the sleep timer later RESETs the CPU
+C  F2BA wait for the key to be released
+C  F2BD disable the logic-battery interrupt from now on
+C  F2C5 B = drive byte, A = power
+C  F2C7 PWR_REST: restore drive and power
+C  F2CA IRQ flags back for the dispatcher
+
+H  F2B5
+;---------------------------------------------------------------
+; LGLO_WAKE - resume the battery warning after a battery sleep
+;
+; Reached by JMP from RESET ($F39C) when the last sleep period ends and
+; BATSLEEP is set: reloads the stack saved before sleeping and repeats
+; the warning.
+;
+; In:        BATSP
+;---------------------------------------------------------------
+
+H  F2CC
+;---------------------------------------------------------------
+; LOWVOLT_PH - phonemes for "low voltage" (L O W STOP V O L T I T CH PA1)
+;---------------------------------------------------------------
+
+# =====================================================================
+H  F2D9
+;---------------------------------------------------------------
+; MOTOR_LOW - motor battery low warning
+;
+; Unless HK_MOTLO returns C=0, stops the drive, shows "dr Lo." and waits
+; with interrupts masked (motors frozen) until a key is pressed, then
+; disables this interrupt (IRQMASK = $FB) and restores drive and power;
+; BUSY is untouched, so a drive move continues afterwards. No speech, no
+; sleep.
+;
+; In:        A = IRQ flags (kept)
+; Out:       A preserved                                       (contract)
+; Memory:    IRQMASK, IRQFLAGS, DRIVE, POWER, display
+;---------------------------------------------------------------
+C  F2D9 hook HK_MOTLO: C=1 (default) = let the ROM handle it
+C  F2DC C=0: user handled it
+C  F2E0 PWR_SAVE: masked, drive off, A = power, B = drive byte
+C  F2E5 PWR_DISP: display only, clear display
+C  F2E8 OUTSTR: show the inline string
+C  F2F0 wait for a key (debounced)
+C  F2F5 wait for its release
+C  F2F8 disable the motor-battery interrupt from now on
+C  F302 PWR_REST: restore drive and power
+
+H  F307
+;---------------------------------------------------------------
+; PWR_SAVE - mask interrupts, stop the drive, return what to restore
+;
+; Out:       A = POWER_SH, B = DRVNOW; I=1
+; Memory:    DRIVE port (0 = off)
+;---------------------------------------------------------------
+C  F307 masked (left masked)
+C  F311 drive off; DRVNOW still holds the old value
+
+H  F317
+;---------------------------------------------------------------
+; PWR_DISP - power only the display, let it settle, clear it
+;
+; Memory:    POWER (DRVNOW/POWER_SH untouched), display
+;---------------------------------------------------------------
+C  F317 POWER = display only
+C  F31C ~110 ms
+C  F322 CLRDIS: blank the display
+
+H  F326
+;---------------------------------------------------------------
+; PWR_REST - clear the display and restore drive and power
+;
+; In:        A = power byte, B = drive byte (from PWR_SAVE)
+; Memory:    DRIVE, DRVNOW, POWER, POWER_SH, display
+;---------------------------------------------------------------
+C  F328 CLRDIS: blank the display
+
+# =====================================================================
+H  F33A
+;---------------------------------------------------------------
+; NMI - ABORT button
+;
+; Resets the hardware, shows "Abor7." (the last digit is a 7-like t) for
+; about 1.8 s, then "Pc." and the address from $0EE2, and hangs until
+; RESET. In Robot Language ($0EE1 <> 0) $0EE2 already holds the address
+; of the robot instruction being run (set at $E000), which is shown
+; correctly. In machine language the code means to fetch the stacked PC
+; into A/B but then stores X (the stack frame address) instead: bug.
+; Emulator: aborting a native loop at $0300 showed "Pc.0F98", aborting a
+; robot program at $0400 showed "Pc.0400".
+;
+; In:        ROBOTMODE $0EE1 (nonzero = Robot Language), CURPC $0EE2
+;---------------------------------------------------------------
+C  F33A running Robot Language?
+C  F33F X = interrupt frame (CC B A XH XL PCH PCL)
+C  F340 A = PC low, B = PC high ... (unused)
+C  F344 ... bug: saves the frame address, not A/B
+C  F34A HWINIT: drive off, phases off, busy bits cleared
+C  F34D power = display only
+C  F352 CLRDIS: blank the display
+C  F355 OUTSTR: show the inline string
+C  F35D 3 x 65535 x 8 cycles = about 1.8 s
+C  F368 CLRDIS: blank the display
+C  F36B OUTSTR: show the inline string
+C  F370 OUTBYT: high byte of the address
+C  F376 OUTBYT: low byte
+C  F37C wait here for RESET
+
+# =====================================================================
+H  F37E
+;---------------------------------------------------------------
+; RESET - power-on, RESET key, and wake-up from sleep
+;
+; After HWINIT the sleep switch decides. Normal: cold start through
+; RAMINIT into the Executive. Sleep: this reset is the sleep timer's
+; 10-second wake-up. SLEEPCNT is decremented; if periods remain the robot
+; sleeps again at once (power = $40, WAI; the power-down ends the CPU and
+; the next timer reset comes back here). On the last period it either
+; resumes the battery warning (BATSLEEP set) or resumes the robot program
+; at $F5B5 with $F423 (Executive) pushed as return address; the program's
+; PC was already moved past the 87 instruction by $E450. RAM, the hooks
+; and the vectors survive a wake-up (RAMINIT does not run).
+; Note: RESET with the switch at Sleep and SLEEPCNT = 0 decrements it to
+; $FFFF, so the robot naps in 10 s periods until the switch is moved to
+; Normal (emulator: power = $40 with SLEEPCNT = $FFFF).
+;
+; In:        MOTB bit 1 (sleep switch, 1 = Normal), SLEEPCNT, BATSLEEP
+;---------------------------------------------------------------
+C  F37E temporary stack
+C  F381 HWINIT: ports, shadows and busy bits to rest
+C  F383 sleep switch at Normal?
+C  F388 yes: cold start
+C  F38A one sleep period over
+C  F38F all done: wake up
+C  F391 POWER = sleep only: +5 V goes off for another 10 s
+C  F396 park until the power-down
+C  F397 woke from a battery-warning sleep?
+C  F39C yes: back to the warning loop
+C  F39F the interpreter's stack
+C  F3A2 push $F423 (Executive) as the return address
+C  F3A8 continue the sleeping robot program
+
+H  F3AB
+;---------------------------------------------------------------
+; HWINIT - put all output ports and their shadows in the rest state
+;
+; DRIVE/DRVNOW/DRVTARGET = $3F (off); MOTA = $F0 (steering released, pivot
+; and rotate off) and MOTA_SH; CTRL = $0F (no arm motor selected, speech
+; strobe low, clock register $F) and CTRL_SH; CLOCK port = $AF (the same
+; value the manual's clock example writes first); BUSY = ABORTREQ = 0;
+; IRQFLAGS written $00 (reset all flip-flops) then $FF (enable all), and
+; IRQMASK = $FF. The I flag is not changed.
+;
+; Out:       B = $FF                                           (contract)
+; Memory:    DRIVE, MOTA, CTRL, CLOCK, IRQFLAGS and their shadows,
+;            DRVTARGET, BUSY, ABORTREQ, IRQMASK
+;---------------------------------------------------------------
+C  F3AB drive off
+C  F3B6 B = 0 for the clears below
+C  F3B7 steering lines high (released), low nibble off
+C  F3BF $0F: select bits 7/6 = 0, strobe low, clock register $F
+C  F3C6 MSM5832 control byte
+C  F3CB nothing busy
+C  F3CD no stop requests
+C  F3CF reset every interrupt flip-flop
+C  F3D2 then enable all eight sources
+C  F3D7 and remember the mask
+
+H  F3DB
+;---------------------------------------------------------------
+; RAMINIT - cold-start RAM setup, falls into the Executive at $F423
+;
+; Sets (and nothing else; positions $0000-$0006, DRVCOUNT, ODOMETER and the
+; user keys $0030-$0038 are left as they are):
+;   TICKS ($0EFC) = 0            tick counter restarts
+;   BATSLEEP ($000F) = 0         not in a battery sleep
+;   SPK_BASE ($0F15) = $0F13      bottom slot of the speech call stack
+;   SPKLIM ($0F17) = $0F03       overflow mark of that stack
+;   $0FF4 = $0F97                user register frame pointer / initial user SP
+;   $0FE0-$0FEB = $FF            four 3-byte breakpoint entries (saved byte,
+;                                address) cleared, as $F5C2 reads them
+;   $0FF6 = $7E                  JMP opcode: the SWI vector points at $0FF6,
+;                                the monitor fills in the target at $0FF7
+;   $0012 = RTS                  interpreter per-instruction hook ($E000)
+;   $0015 = SEC,RTS              interpreter unknown-opcode hook (C=1: not handled)
+;   HK_IRQ $0018 = RTS
+;   HK_TICK $001B = RTS
+;   HK_DRIVE $001E = RTS
+;   HK_LOGLO $0021 = SEC,RTS     ROM handles the logic-battery warning
+;   HK_MOTLO $0024 = SEC,RTS     ROM handles the motor-battery warning
+;   VEC_MOTION $0027, VEC_TRIG $002A, VEC_EXP $002D = RTS
+; Only the first byte(s) are written, so the hooks are three-byte slots
+; meant for a JMP. They are reset only by this cold start (RESET with the
+; switch at Normal), not on every return to the Executive as the manual
+; says.
+;---------------------------------------------------------------
+C  F3E1 speech stack bottom slot
+C  F3E7 speech stack overflow mark
+C  F3ED initial user stack / register frame
+C  F3F3 fill byte
+C  F3F5 12 bytes: the four breakpoint entries
+C  F3FA clear one byte
+C  F400 JMP opcode in front of the SWI target
+C  F405 A = RTS, B = SEC
+C  F409 $0015: SEC
+C  F40B $0016: RTS
+C  F40D HK_TICK: RTS
+C  F40F $0012: RTS
+C  F411 HK_LOGLO: SEC
+C  F413 then RTS
+C  F415 HK_MOTLO: SEC
+C  F417 then RTS
+C  F419 HK_IRQ: RTS
+C  F41B VEC_MOTION: RTS
+C  F41D VEC_TRIG: RTS
+C  F41F HK_DRIVE: RTS
+C  F421 VEC_EXP: RTS; falls into the Executive at $F423

@@ -1,0 +1,1533 @@
+<title>Heathkit HERO 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a 46rem reading column like a Heathkit manual; spec sheets, tables and the emulator break out to 66rem. */
+:root{
+  --bg:#ECEFF2; --surface:#FFFFFF; --ink:#17202A; --muted:#566271; --rule:#C9D1DA;
+  --accent:#C8302A; --accent2:#1E6A86;
+  --panel:#1B1E23; --panel-ink:#D9DEE5; --led:#FF3A2E; --led-off:#3A1A18; --key:#2B3038; --key-ink:#F0F3F6;
+  --room:#F7F9FB; --grid:#DCE2E8; --wall:#7C8794;
+  --f-display:"Chakra Petch","Arial Narrow",Arial,sans-serif;
+  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#11151A; --surface:#191F27; --ink:#E3E8EE; --muted:#9AA6B3; --rule:#2B3440;
+  --accent:#FF5B4F; --accent2:#62B4D2; --room:#141A21; --grid:#252E39; --wall:#6E7A88; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#11151A; --surface:#191F27; --ink:#E3E8EE; --muted:#9AA6B3; --rule:#2B3440;
+  --accent:#FF5B4F; --accent2:#62B4D2; --room:#141A21; --grid:#252E39; --wall:#6E7A88; color-scheme:dark }
+
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1.075rem;line-height:1.62;padding-inline:16px;padding-block:0 4rem}
+.col{max-width:46rem;margin-inline:auto}
+.wide{max-width:66rem;margin-inline:auto}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.6rem,4vw,2.1rem);letter-spacing:.01em}
+h3{font-size:1.15rem;letter-spacing:.02em;margin-top:.6rem}
+p{margin:0}
+a{color:var(--accent2)}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+.label{font-family:var(--f-display);font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:.74rem;color:var(--muted)}
+section{display:grid;gap:1.1rem;padding-block:3rem 0}
+.sec-head{display:grid;gap:.4rem;border-top:3px solid var(--ink);padding-top:.8rem}
+.sec-head .label{color:var(--accent)}
+nav.toc{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-family:var(--f-display);font-size:.85rem;letter-spacing:.04em;padding-block:1.2rem 0}
+nav.toc a{color:var(--muted);text-decoration:none} nav.toc a:hover{color:var(--accent)}
+
+.masthead{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:2rem;align-items:center;padding-block:2.5rem 1rem}
+.masthead h1{font-size:clamp(3rem,10vw,5.6rem);font-weight:700;letter-spacing:-.01em}
+.masthead h1 span{color:var(--accent)}
+.masthead .dek{font-size:1.2rem;color:var(--muted);max-width:32rem}
+.masthead .modelno{font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.masthead svg{width:100%;max-width:320px;justify-self:center}
+@media (max-width:640px){.masthead{grid-template-columns:1fr}.masthead svg{max-width:220px}}
+
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));border:1px solid var(--rule);background:var(--surface)}
+.spec div{padding:.8rem 1rem;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);display:grid;gap:.15rem}
+.spec b{font-family:var(--f-display);font-size:1.35rem;font-variant-numeric:tabular-nums}
+.spec small{color:var(--muted);font-size:.85rem;line-height:1.35}
+
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+.tbl{overflow-x:auto;border:1px solid var(--rule);background:var(--surface)}
+th,td{text-align:left;padding:.45rem .7rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-display);font-weight:600;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.op{font-family:var(--f-mono);white-space:nowrap;color:var(--accent)}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+td.mono{font-family:var(--f-mono);font-size:.82rem;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.note{border-left:4px solid var(--accent2);background:var(--surface);padding:.9rem 1.1rem;display:grid;gap:.4rem;font-size:.97rem}
+.note .label{color:var(--accent2)}
+.pull{font-family:var(--f-display);font-size:1.35rem;line-height:1.3;color:var(--accent);font-weight:600}
+figure{margin:0;display:grid;gap:.4rem}
+figcaption{font-size:.85rem;color:var(--muted)}
+ul.plain{display:grid;gap:.45rem;padding-left:1.2rem;margin:0}
+
+.bits{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));font-family:var(--f-mono);font-size:.8rem;text-align:center;border:1px solid var(--rule);background:var(--surface)}
+.bits span{padding:.35rem 0;border-right:1px solid var(--rule)}
+.bits .f{grid-row:2;padding:.3rem .2rem;font-family:var(--f-display);font-size:.72rem;letter-spacing:.04em;border-top:1px solid var(--rule)}
+.f.m{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.f.s{background:color-mix(in srgb,var(--accent2) 18%,transparent)}
+.f.d{background:color-mix(in srgb,var(--ink) 10%,transparent)}
+
+/* register model */
+.regs{display:grid;gap:.35rem;font-family:var(--f-mono);font-size:.85rem;background:var(--surface);border:1px solid var(--rule);padding:1rem}
+.reg{display:grid;grid-template-columns:4.5rem minmax(0,1fr) minmax(0,9rem);gap:.6rem;align-items:center}
+.reg .bar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--ink);height:1.7rem}
+.reg .bar span{border-right:1px solid var(--rule);display:grid;place-items:center;font-size:.72rem}
+.reg .bar span:last-child{border-right:0}
+.reg .w8{width:50%} .reg .nm{font-family:var(--f-display);font-weight:600}
+.reg .ds{color:var(--muted);font-family:var(--f-body);font-size:.85rem}
+.reg .cc span{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.reg .cc span.fix{background:transparent;color:var(--muted)}
+@media (max-width:560px){.reg{grid-template-columns:3rem minmax(0,1fr)}.reg .ds{grid-column:1/-1}}
+
+/* memory map */
+.memmap{display:grid;border:1px solid var(--rule);background:var(--surface);font-size:.9rem}
+.memmap div{display:grid;grid-template-columns:8.2rem minmax(0,1fr);gap:.8rem;padding:.4rem .8rem;border-bottom:1px solid var(--rule)}
+.memmap div:last-child{border-bottom:0}
+.memmap .a{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.memmap .ram{border-left:6px solid var(--accent2)} .memmap .rom{border-left:6px solid var(--accent)} .memmap .io{border-left:6px solid var(--ink)} .memmap .ex{border-left:6px solid var(--rule)}
+
+/* emulator */
+.emu{display:grid;grid-template-columns:minmax(0,19rem) minmax(0,1fr);gap:1rem;align-items:start}
+@media (max-width:860px){.emu{grid-template-columns:1fr}}
+.headpanel{background:var(--panel);color:var(--panel-ink);border-radius:14px;padding:1rem;display:grid;gap:.9rem}
+.seg{background:#0E0F12;border-radius:6px;padding:.6rem .5rem}
+.seg svg{width:100%;height:auto;display:block}
+.seg .s{fill:var(--led-off)} .seg .s.on{fill:var(--led)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem}
+.keys button,.xbtn button{font-family:var(--f-display);font-weight:600;font-size:1.1rem;border:0;border-radius:6px;padding:.55rem 0;background:var(--key);color:var(--key-ink);cursor:pointer;box-shadow:0 2px 0 #0008}
+.keys button.hit{background:var(--led);color:#1B0907}
+.keys button:active,.xbtn button:active{transform:translateY(1px);box-shadow:none}
+.keys button.reset{font-size:.78rem;letter-spacing:.08em;background:#5A2622}
+.xbtn{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem}
+.xbtn button{font-size:.74rem;letter-spacing:.07em;background:#363C46;padding:.5rem .2rem}
+.xbtn label{font-family:var(--f-display);font-size:.74rem;letter-spacing:.06em;display:flex;align-items:center;gap:.4rem;color:#BFC6CF}
+.xbtn input[type=range]{width:100%}
+.panel-note{font-size:.76rem;color:#9AA3AE;font-family:var(--f-mono);line-height:1.45}
+.stage{display:grid;gap:.75rem;min-width:0}
+canvas{width:100%;height:auto;display:block;background:var(--room);border:1px solid var(--rule);border-radius:8px}
+.loader{display:grid;gap:.5rem;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:.7rem .8rem}
+.loader-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.loader select{font-family:var(--f-body);font-size:.95rem;padding:.35rem .4rem;border-radius:6px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);min-width:0;max-width:100%}
+.loader button{font-family:var(--f-display);font-weight:600;font-size:.82rem;letter-spacing:.05em;padding:.45rem .8rem;border-radius:6px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.loader button.go{background:var(--accent);border-color:var(--accent);color:#fff}
+.loader .src{font-size:.85rem;color:var(--muted)}
+.loader input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+.filebtn{font-family:var(--f-display);font-weight:600;font-size:.82rem;letter-spacing:.05em;padding:.45rem .8rem;border-radius:6px;border:1px solid var(--accent2);color:var(--accent2);cursor:pointer}
+.loader input[type=file]:focus-visible+.filebtn,.filebtn:focus-within{outline:2px solid var(--accent2)}
+.loader .seq{font-family:var(--f-mono);font-size:.82rem}
+.emu-row{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:.75rem}
+@media (max-width:600px){.emu-row{grid-template-columns:1fr}}
+.listing{font-family:var(--f-mono);font-size:.74rem;background:var(--surface);border:1px solid var(--rule);border-radius:8px;height:18rem;overflow:auto}
+.listing div{display:grid;grid-template-columns:2.9rem 6.2rem minmax(0,1fr);gap:.35rem;padding:.08rem .5rem;white-space:nowrap}
+.listing .pc{background:color-mix(in srgb,var(--accent) 24%,transparent)}
+.listing .a{color:var(--muted)} .listing .b{color:var(--accent2)} .listing .rl{color:var(--accent)} .listing .dt{color:var(--muted);font-style:italic}
+.listing .mode{grid-template-columns:1fr;color:var(--muted);font-family:var(--f-display);letter-spacing:.06em;font-size:.7rem;padding-top:.3rem}
+.side{display:grid;gap:.6rem;align-content:start}
+.kv{font-family:var(--f-mono);font-size:.74rem;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:.45rem .6rem;display:grid;grid-template-columns:auto 1fr auto;gap:.08rem .6rem;font-variant-numeric:tabular-nums}
+.kv .k{color:var(--muted)}
+.kv .hdr{grid-column:1/-1;font-family:var(--f-display);letter-spacing:.08em;font-size:.68rem;color:var(--muted);text-transform:uppercase}
+.statusline{display:flex;flex-wrap:wrap;gap:.4rem .8rem;font-family:var(--f-mono);font-size:.78rem;align-items:center}
+.pill{font-family:var(--f-display);font-size:.72rem;letter-spacing:.08em;padding:.15rem .5rem;border-radius:99px;border:1px solid var(--rule)}
+.pill.robot{background:var(--accent);border-color:var(--accent);color:#fff}
+.pill.machine{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.speech{color:var(--accent)}
+.log{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:.4rem .6rem;height:5.4rem;overflow:auto}
+
+.family{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));border:1px solid var(--rule);background:var(--surface)}
+.family article{padding:1rem;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);display:grid;gap:.4rem;align-content:start}
+.family h3{margin:0} .family h3 span{font-family:var(--f-mono);font-weight:400;font-size:.8rem;color:var(--muted)}
+.family p{font-size:.93rem}
+ol.sources{font-size:.88rem;display:grid;gap:.35rem;padding-left:1.2rem}
+footer{margin-top:3rem;font-size:.85rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+
+<header class="wide masthead">
+  <div style="display:grid;gap:1rem">
+    <span class="label">Heath Company · Benton Harbor, Michigan · 1982</span>
+    <h1>HERO<span>&nbsp;1</span></h1>
+    <p class="dek">A 39-pound mobile robot with sonar, a five-axis arm and a phoneme voice, sold through a mail-order kit catalog and assembled on kitchen tables and in college labs. Forty years before Optimus.</p>
+    <span class="modelno">ET-18 kit · ETW-18 factory-wired · "Heathkit Educational RObot"</span>
+  </div>
+  <svg viewBox="0 0 240 300" role="img" aria-label="Line drawing of the HERO 1 robot: domed rotating head with keypad, arm extending forward, octagonal body on a three-wheel base">
+    <g fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M45 140 Q45 70 120 62 Q195 70 195 140 Z" fill="var(--surface)"/>
+      <rect x="92" y="78" width="56" height="14" rx="2" fill="var(--panel)"/>
+      <g fill="var(--led)" stroke="none"><rect x="96" y="82" width="6" height="6"/><rect x="104" y="82" width="6" height="6"/><rect x="112" y="82" width="6" height="6"/><rect x="120" y="82" width="6" height="6"/><rect x="128" y="82" width="6" height="6"/><rect x="136" y="82" width="6" height="6"/></g>
+      <g stroke-width="1.5"><rect x="104" y="96" width="32" height="36" rx="2"/><path d="M114.7 96v36M125.3 96v36M104 102h32M104 108h32M104 114h32M104 120h32M104 126h32"/></g>
+      <circle cx="68" cy="112" r="9" fill="var(--surface)"/><circle cx="68" cy="112" r="4" fill="var(--ink)"/>
+      <circle cx="172" cy="104" r="6" fill="var(--accent)" stroke="none"/>
+      <path d="M40 140h160v10H40z" fill="var(--ink)"/>
+      <path d="M52 150h136l14 100H38z" fill="var(--surface)"/>
+      <path d="M70 150l-8 100M170 150l8 100" stroke-width="1.5"/>
+      <rect x="95" y="175" width="50" height="40" rx="3" stroke-width="1.5"/>
+      <path d="M34 250h172v14H34z" fill="var(--ink)"/>
+      <circle cx="62" cy="272" r="12" fill="var(--surface)"/><circle cx="178" cy="272" r="12" fill="var(--surface)"/>
+      <path d="M195 112h22l10 30" stroke-width="7" stroke="var(--ink)"/>
+      <path d="M195 112h22l10 30" stroke-width="3" stroke="var(--surface)"/>
+      <path d="M220 142l-6 16M234 142l6 16" stroke-width="3"/>
+    </g>
+  </svg>
+</header>
+
+<div class="wide">
+  <div class="spec">
+    <div><span class="label">Complete kit, 1982</span><b>$1,500</b><small>About $5,260 in 2027 dollars. Factory-built: $2,500, about $8,760.</small></div>
+    <div><span class="label">Sold</span><b>~14,000</b><small>Over roughly eight years</small></div>
+    <div><span class="label">Brain</span><b>Motorola 6808</b><small>3.58 MHz crystal ÷ 4 ≈ 0.9 MHz; 4 KB RAM, 8 KB ROM</small></div>
+    <div><span class="label">Size</span><b>20 in · 39 lb</b><small>18 in diameter, four 6 V gel cells</small></div>
+  </div>
+  <nav class="toc" aria-label="Chapters">
+    <a href="#what">1 What it was</a><a href="#origins">2 Origins</a><a href="#users">3 Who used it</a><a href="#cost">4 What it cost</a><a href="#cpu">5 The 6800</a><a href="#hardware">6 Hardware</a><a href="#program">7 Programming</a><a href="#emulator">8 Emulator</a><a href="#family">9 Family</a><a href="#sources">Sources</a>
+  </nav>
+</div>
+
+<main class="col">
+<section id="what">
+  <div class="sec-head"><span class="label">1 · What it was</span><h2>A real robot, from the people who sold you an oscilloscope kit</h2></div>
+  <p>At a December 1982 press conference Heath introduced HERO 1 as the nation's first mass-produced robot with a full set of senses. Reporters reached for the obvious comparison and said it looked like R2-D2. It could see light, hear sound, detect motion, range objects by sonar, talk through a phoneme synthesizer, roll around on three wheels and pick things up with a five-axis arm. Everything was run by an onboard Motorola 6808 that you programmed in hex on a keypad on its head.</p>
+  <p>Like every Heathkit, it came two ways. The <b>ET-18</b> was a box of parts and a 213-page assembly manual; Heath estimated 40 to 60 hours of work and advised beginners not to try it. The <b>ETW-18</b> arrived wired and tested, with the arm and voice included. Heath kept supporting the HERO family until 1995, and about 14,000 HERO 1s were sold.</p>
+  <div class="note"><span class="label">On the sales number</span><p>Wikipedia and most retellings say 14,000 HERO 1s over eight years. The long-running owners' FAQ phrases the same figure as "14,000 assembled Hero 1's," which would put kits on top of it. Treat 14,000 as the best available total and the kit/wired split as unknown.</p></div>
+</section>
+
+<section id="origins">
+  <div class="sec-head"><span class="label">2 · Origins</span><h2>How a kit company ended up building robots</h2></div>
+  <p>The robot came out of Heath's education business rather than its hobby kits. Lou Frenzel had come to Heath from McGraw-Hill's home-study business in the early 1970s to start a line of self-instruction courses, each paired with a kit trainer you built and experimented on. The first products shipped in 1974. Microprocessor courses followed, built around the ET-3400 trainer: a 6800 on a board with a hex keypad and six LED digits. Frenzel later wrote that he helped conceive HERO and that his team designed and built it.</p>
+  <p>Seen from there, HERO 1 is an ET-3400 that grew wheels. It used the same processor family, the same keypad-and-seven-segment monitor and the same teaching method, and it shipped with a robotics course written by the same group. Heath was betting on industrial automation: robot counts in US plants were expected to grow more than tenfold during the decade, and those plants would need trained technicians.</p>
+  <p>The timing is notable. Heath started the project in October 1979, the same year Zenith bought the company from Schlumberger, the oil-services firm that also owned Fairchild Semiconductor. The block diagram in the schematic set carries a 1980 Heath copyright, so the electrical design was largely done two years before launch. The hard part was mechanical. A later education product manager recalled that Heath had exactly two mechanical engineers on staff, and Frenzel singled out the arm as the toughest part of the job. Owners' repair notes about loose wrists and binding heads bear that out.</p>
+  <p>The line outlived the company that made it. As Heath wound down in the 1990s it sold the HERO rights, documentation and parts to Mobile Ed Productions of Redford, Michigan. In 2002 Robert Doerr's Robot Workshop bought them and still supports HERO owners with parts and repairs.</p>
+</section>
+
+<section id="users">
+  <div class="sec-head"><span class="label">3 · Who used it</span><h2>Training rooms first, hobbyists second</h2></div>
+  <p>Heath said plainly at launch that industry was the first target and the home would come later. HERO 1 was mainly a teaching instrument, and the evidence of its use comes from four directions.</p>
+  <ul class="plain">
+    <li><b>Industrial and vocational training.</b> The companion course (Robotics and Industrial Electronics) ran twelve lessons, about 120 hours, from robot fundamentals and fluid power through the 6808, sensors, speech and industrial robots, with an optional final exam graded by Heath. Creative Computing's 1983 review described it as built for industrial training as well as individuals. Heath's education group sold through representatives who called on technical schools.</li>
+    <li><b>Colleges and universities.</b> CUNY's New York City College of Technology kept a HERO teaching students for about fifteen years before a student club revived it in 2017. The University of Wollongong wrote a 1984 working paper on loading HERO programs from Unix. A 1985 University of Central Florida master's thesis built a high-level language and compiler for it, and a 1987 Korean paper did the same on an Apple II. Czech Technical University rebuilt one with a PC/104 controller in 2007. One professor used his in embedded-systems classes because students could see their code move something, and blocked off the stairwells because the robot sometimes headed for them.</li>
+    <li><b>Schools and teachers.</b> Individual teachers built them. A COMPUTE! columnist taught a 1983 robotics course in England on a HERO borrowed from Zenith Data Systems, and a former teacher remembers programming one to play Red Light, Green Light with kindergartners.</li>
+    <li><b>Hobbyists and television.</b> Owners formed a mailing list and a user group that still trade parts and upgrades. HERO appeared on several episodes of <i>Mr. Wizard's World</i>, which is how many people first saw a robot that was not a movie prop.</li>
+  </ul>
+  <div class="note"><span class="label">What the record does not show</span><p>No source gives a count of school or college installations, and nothing I found documents military use. The usage picture above is assembled from individual institutions and reviews.</p></div>
+</section>
+
+<section id="cost">
+  <div class="sec-head"><span class="label">4 · What it cost</span><h2>About the price of a used car</h2></div>
+  <p>Converted with BLS CPI-U annual averages to 2027 dollars (2027 projected at +2.5% a year from 2025), the same method used for the machine tables in the TRS-80 book.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Item</th><th>Year</th><th class="num">Then</th><th class="num">2027 dollars</th></tr></thead>
+    <tbody>
+      <tr><td>HERO 1 complete kit (robot, arm, voice)</td><td>1982</td><td class="num">$1,500</td><td class="num">$5,260</td></tr>
+      <tr><td>HERO 1 factory-built ETW-18</td><td>1982</td><td class="num">$2,500</td><td class="num">$8,760</td></tr>
+      <tr><td>Robot kit alone (ET-18)</td><td>1983</td><td class="num">$999.95</td><td class="num">$3,400</td></tr>
+      <tr><td>Arm kit (ET-18-1)</td><td>1983</td><td class="num">$399.95</td><td class="num">$1,360</td></tr>
+      <tr><td>Voice kit (ET-18-2)</td><td>1983</td><td class="num">$149.95</td><td class="num">$510</td></tr>
+      <tr><td>HERO 1 kit / assembled, mid-1985</td><td>1985</td><td class="num">$1,150 / $2,149</td><td class="num">$3,620 / $6,760</td></tr>
+      <tr><td>HERO Jr. kit / assembled</td><td>1984</td><td class="num">$599.95 / $1,000</td><td class="num">$1,950 / $3,260</td></tr>
+      <tr><td>HERO 2000 kit / assembled</td><td>1986</td><td class="num">$3,000 / $4,500</td><td class="num">$9,260 / $13,890</td></tr>
+      <tr><td>Motorola MC6800, single unit at launch</td><td>1974</td><td class="num">$360</td><td class="num">$2,470</td></tr>
+    </tbody>
+  </table></div>
+  <p>The 1983 component prices add up to $1,549.85, which is where the "$1,500 kit" figure comes from. For comparison, a 16 KB TRS-80 Model III cost $999 in 1980. A fully equipped HERO cost about as much as a well-equipped personal computer with disk drives.</p>
+</section>
+
+<section id="cpu">
+  <div class="sec-head"><span class="label">5 · The chip</span><h2>The Motorola 6800 family</h2></div>
+  <p>Motorola announced the MC6800 in March 1974, a few weeks before Intel's 8080. The chief architect was Tom Bennett, working with a team that included Jeff LaVell, Mike Wiles and Rod Orgill; Chuck Peddle joined in 1973 to take it to customers. It was an n-channel MOS part of about 4,000 transistors that ran at up to 1 MHz. Its most practical advantage over the 8080 was power: it needed only a single +5 V supply, while the 8080 needed three.</p>
+  <p>The architecture is clean and very readable. Two 8-bit accumulators, A and B, a 16-bit index register X, a 16-bit stack pointer, a 16-bit program counter and a condition-code register. It has 72 instructions in seven addressing modes, encoded in 197 opcodes, with memory-mapped I/O and no separate I/O space. Anyone who later met the 6502, 6809, 68HC11 or even the 68000 will recognize the style.</p>
+  <figure>
+    <div class="regs" role="img" aria-label="6800 programmer's model: accumulators A and B, index register X, program counter, stack pointer, condition codes 1 1 H I N Z V C">
+      <div class="reg"><span class="nm">A</span><div class="bar w8"><span>8-bit accumulator</span></div><span class="ds">Arithmetic and logic</span></div>
+      <div class="reg"><span class="nm">B</span><div class="bar w8"><span>8-bit accumulator</span></div><span class="ds">Second accumulator</span></div>
+      <div class="reg"><span class="nm">X</span><div class="bar"><span>16-bit index register</span></div><span class="ds">Pointer; addresses $nn,X</span></div>
+      <div class="reg"><span class="nm">PC</span><div class="bar"><span>16-bit program counter</span></div><span class="ds">64 KB address space</span></div>
+      <div class="reg"><span class="nm">SP</span><div class="bar"><span>16-bit stack pointer</span></div><span class="ds">Grows downward</span></div>
+      <div class="reg"><span class="nm">CC</span><div class="bar w8 cc"><span class="fix">1</span><span class="fix">1</span><span>H</span><span>I</span><span>N</span><span>Z</span><span>V</span><span>C</span></div><span class="ds">Half-carry, IRQ mask, negative, zero, overflow, carry</span></div>
+    </div>
+    <figcaption>The 6800 programmer's model. The two top bits of CC always read as 1.</figcaption>
+  </figure>
+  <h3>The chip that spawned the 6502</h3>
+  <p>The 6800's most famous descendant is not a Motorola part. Launch pricing was $360, matching the 8080. In August 1974 Chuck Peddle left for MOS Technology in Pennsylvania, and seven Motorola engineers followed. There they built the 6501, which plugged into a 6800 socket, and the 6502, which had its own clock generator. Neither ran 6800 software. Selling for $20 to $25, they forced Motorola to cut the 6800 from $175 to $69 in October 1975. Motorola sued; in the April 1976 settlement MOS dropped the 6501, and the 6800 fell to $35. The cheap 6502 went on to the Apple II, the Commodore PET and the Atari 400/800.</p>
+  <h3>Why HERO has a 6808</h3>
+  <p>In 1977 Motorola released the MC6802, a 6800 with an on-chip clock oscillator and 128 bytes of RAM. The MC6808 is the same die with the RAM disabled, which let Motorola sell parts whose internal RAM had failed test. For Heath this was ideal. One crystal replaced the 6800's separate two-phase clock chip, and the robot needed external RAM anyway. The crystal is 3.579545 MHz, the NTSC color-burst frequency and the cheapest crystal in the world in 1980, divided by four internally for a bus of about 895 kHz. Heath's courses and the ET-3400 trainer already taught the 6800, so the robot course could build on lessons students had already taken.</p>
+  <p>The 6800 also left something useful unused. 197 of 256 opcodes are defined, which leaves 59 holes. HERO's Robot Interpreter fills those holes with robot commands. See chapter 7.</p>
+  <p>Other 6800-family machines include the Altair 680, the SWTPC 6800 (the most successful 6800 personal computer), the Sphere, the Tektronix 4051 graphics computer, the HP 9815A, the APF MP1000 console, and many arcade and pinball boards.</p>
+</section>
+
+<section id="hardware">
+  <div class="sec-head"><span class="label">6 · Hardware</span><h2>Fifteen boards in a fiberglass shell</h2></div>
+  <p>HERO 1 is a bus-and-backplane machine folded into a robot. The CPU and I/O boards sit in the head next to the keypad and display. The power supply, drive electronics and batteries live in the base, and the boards are connected by ribbon cables through the rotating neck. Heath numbered every component by the board it sits on, so a part's reference designator tells you where to look.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Parts</th><th>Board</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">U401…</td><td>CPU</td><td>MC6808 (U401) with a 3.579545 MHz crystal. Two 6116 2K×8 static RAMs (U415, U416) at $0000–$0FFF. 8 KB system ROM (U418) at $E000–$FFFF. A socket for an optional 2/4/8 KB ROM (U417) at $2000. 74LS138s decode 8 KB blocks from A13–A15 and VMA. Eight 74LS73 flip-flops latch interrupt sources onto the single IRQ line.</td></tr>
+      <tr><td class="mono">U301…</td><td>I/O</td><td>74LS374 output and 74LS244 input ports in the $C2xx page. MSM5832 real-time clock on its own 32.768 kHz crystal. Sonar range counter. Sleep and wake logic that shuts everything down except RAM and the clock.</td></tr>
+      <tr><td class="mono">U1201…</td><td>Display</td><td>Six 74LS259 addressable latches, one per digit. Every segment is latched individually, so the display is static, not multiplexed, and the CPU spends no time refreshing it.</td></tr>
+      <tr><td class="mono">U601…</td><td>Sense</td><td>Dynamic microphone and photoresistor feeding an A/D converter. Their levels are read at the sense port $C240.</td></tr>
+      <tr><td class="mono">U101 / U1101…</td><td>Sonar transmit / receive</td><td>Bursts of eight cycles at about 32 kHz. The receiver is two CA3130 stages with 80 dB of gain. The I/O board counts time-of-flight against the 32 kHz reference. Range is 4 in to 8 ft.</td></tr>
+      <tr><td class="mono">U1401…</td><td>Motion</td><td>A continuous-wave ultrasonic motion detector good to about 15 ft. It raises an interrupt.</td></tr>
+      <tr><td class="mono">U701… / U801…</td><td>Arm drive / main drive</td><td>Steppers for head, steering and five arm axes, switched by 4N26 opto-isolators driving Darlington pairs, so motor noise stays off the logic supply. The DC drive motor is PWM-controlled by an LM556, with an optical encoder disk on the drive wheel.</td></tr>
+      <tr><td class="mono">U501…</td><td>Speech</td><td>Votrax SC-01 phoneme synthesizer and LM388 amplifier. The CPU writes a 6-bit phoneme (plus 2 inflection bits) to $C240; the chip asks for the next one when it finishes.</td></tr>
+      <tr><td class="mono">U201…</td><td>Power supply</td><td>Four 6 V, 4 Ah gel cells form separate 12 V logic and motor systems. An SG3524 switching regulator makes the +5 V logic supply. The charger floats the cells at 13.9 V, and a cutout trips at 10 V.</td></tr>
+      <tr><td class="mono">U1301… / U1501… / U901…</td><td>Experimental, wrist/shoulder, remote</td><td>The breadboard on the head, wired to the bus, plus the Abort button and Sleep switch. The arm's local board. The optional RF remote.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Memory map</h3>
+  <div class="memmap">
+    <div class="ram"><span class="a">$0000–$0038</span><span>Motor positions ($0000–$0006), sonar hits/range ($0010/$0011), interrupt vectors ($0027 motion, $002A pendant trigger, $002D experimental IRQ), user keys ($0030/$0033/$0036)</span></div>
+    <div class="ram"><span class="a">$0039–$0EDE</span><span>User program RAM (2 × 6116)</span></div>
+    <div class="ram"><span class="a">$0EDF–$0FFF</span><span>Monitor workspace: stack, display pointer DIGADD ($0FF2), 1,024 Hz tick counter ($0EFC)</span></div>
+    <div class="ex"><span class="a">$1000–$1FFF</span><span>Unused on a stock robot; the ET-18-6 memory board fills $1000–$BFFF</span></div>
+    <div class="ex"><span class="a">$2000–$3FFF</span><span>Optional ROM socket U417 (BASIC, utility and demo ROMs)</span></div>
+    <div class="io"><span class="a">$C000–$C3FF</span><span>I/O: keypad $C003, display $C110, interrupt status $C200, sonar $C220, sense and speech $C240, motors $C260/$C280/$C2A0, power $C2E0, clock $C300</span></div>
+    <div class="rom"><span class="a">$E000–$FFFF</span><span>8 KB system ROM: executive, monitor, display and keypad routines, Robot Interpreter, phrase table, vectors</span></div>
+  </div>
+  <h3>What the ROM revealed</h3>
+  <p>An 8 KB dump of the system ROM (U418) turned up in a 1991 collection of PC-era ROM images, and it runs. It identifies itself on the display as <code>HEro 1.0</code>, the original firmware for the 3.58 MHz crystal. The bytes the FAQ uses to tell the later 1.3 and 1.U upgrades apart match neither. Running it against the schematics answered questions the manuals leave open.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Subsystem</th><th>What the firmware does</th></tr></thead>
+    <tbody>
+      <tr><td>Interrupts</td><td>A single IRQ handler at $EFC9 reads the eight flip-flops at $C200 and dispatches: sonar echo (bit 0), motion (1), motor battery low (2), logic battery low (3), the 1,024 Hz clock tick (4), pendant trigger (5), drive encoder (6), experimental board (7). Motion, trigger and experimental-board interrupts go through the RAM vectors at $0027, $002A and $002D. Writing $C200 both clears flags and sets the enable mask.</td></tr>
+      <tr><td>Everything else is the clock tick</td><td>Motor stepping, the drive ramp and speech all run inside the 1,024 Hz tick, which is why the interpreter can start a motor and carry on with the next command.</td></tr>
+      <tr><td>Steppers</td><td>Two-phase bipolar sequence 0110 → 0101 → 1001 → 1010. Steering uses the top nibble of $C260; the other six motors share three nibbles ($C260 low, $C280 high and low), and bits 6 and 7 of $C2C0 choose which motor of each pair is energized. That multiplexing is why the interpreter moves only one arm motor at a time.</td></tr>
+      <tr><td>Gear ratios</td><td>One position unit is 32 phase steps for extend, shoulder and head; 8 for wrist rotate, pivot and steering; 4 for the gripper.</td></tr>
+      <tr><td>Drive</td><td>$C2A0 bit 7 sets direction, bit 6 switches the motor on, and bits 0–5 are PWM speed. The ROM ramps speed one level every 32 ms toward the target, then counts encoder interrupts down to zero and stops.</td></tr>
+      <tr><td>Homing</td><td>Initialize drives each arm axis its full range by step count and lets it stall against the mechanical stop. It does not wait for a switch. Head and steering use their limit switches on $C260.</td></tr>
+      <tr><td>Keypad and display</td><td>The ET-3400 design reused: keys pull one of five data lines low on rows read at $C003, $C005 and $C006; each digit is a 74LS259 written one segment at a time at $C11x–$C16x. The firmware also holds a table of spoken phrases, such as the one at $FA93 that the manual's speech example calls.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>The schematics</h3>
+  <p>Heath's complete set survives: four large schematic sheets, the block and interconnect diagram, the 137-page Technical Manual with theory of operation and parts lists, the 213-page Assembly Manual, and the arm, voice, remote, memory-expansion and ROM-accessory manuals. They are on archive.org as <a href="https://archive.org/details/heathkit-hero-1-ET-18">HEATHKIT HERO-1 ET-18 Robot Manuals and Schematics</a>.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Sheet</th><th>Circuits</th></tr></thead>
+    <tbody>
+      <tr><td>1 of 4</td><td>Sense, sonar receive, sonar transmit, teaching pendant</td></tr>
+      <tr><td>2 of 4</td><td>Arm drive, CPU, charger</td></tr>
+      <tr><td>3 of 4</td><td>I/O, main drive, power supply</td></tr>
+      <tr><td>4 of 4</td><td>Display, motion</td></tr>
+      <tr><td>Block diagram</td><td>Interconnect of all boards and cables; keypad layout; board numbering</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="program">
+  <div class="sec-head"><span class="label">7 · Programming</span><h2>Hex on the head, or a pendant in your hand</h2></div>
+  <ul class="plain">
+    <li><b>Keypad and monitor.</b> From the executive ("ready") mode, press 1 for Machine Language or A for Robot Language. In the monitor, A autoloads (type an address, then two digits per byte), E examines, F and B step forward and back, C changes a byte, and D runs ("do") from an address. Keys 1–4 show A, B, PC and X.</li>
+    <li><b>Teaching pendant.</b> A hand box with a motor selector, direction buttons and a trigger. In learn mode the robot records each motion and replays it. The trigger is also an interrupt your programs can use.</li>
+    <li><b>Robot Interpreter.</b> The command language described below.</li>
+    <li><b>Host computer.</b> Later options added RS-232, a memory board and a BASIC ROM. Third parties offered compilers for the IBM PC and Apple II: ANDROTEXT, Dunfield's C and several university languages.</li>
+  </ul>
+  <h3>The trick inside the Robot Interpreter</h3>
+  <p>Heath did not invent a separate bytecode. The interpreter treats the 59 opcodes Motorola left undefined as robot commands, and it executes every ordinary 6800 instruction as well. You switch into it with SWI (<code>3F</code>) and back to native code with <code>83</code>, so one program can mix both. The cost is speed: each interpreted instruction takes several hundred extra cycles. The manual's own benchmark runs a 6,000-pass delay loop in about 41 seconds in Robot Language and 0.3 seconds in Machine Language.</p>
+  <p class="pull">Every motor command packs motor, speed, direction and a 10-bit position into one 16-bit word.</p>
+  <div class="bits" aria-label="Motor word bit layout: bits 15 to 13 motor, 12 to 11 speed, 10 direction, 9 to 0 position or distance">
+    <span>15</span><span>14</span><span>13</span><span>12</span><span>11</span><span>10</span><span>9</span><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span><span>0</span>
+    <span class="f m" style="grid-column:1/4">motor</span><span class="f s" style="grid-column:4/6">speed</span><span class="f" style="grid-column:6/7">D</span><span class="f d" style="grid-column:7/17">position (abs) or distance (rel)</span>
+  </div>
+  <p style="font-size:.95rem;color:var(--muted)">Motor: 0 drive, 1 extend, 2 shoulder, 3 wrist rotate, 4 wrist pivot, 5 gripper, 6 head, 7 steering. Speed: 01 slow, 10 medium, 11 fast. D = 0 runs toward a higher position number, D = 1 toward a lower one; for the drive motor it means forward or reverse. Head to $0BE at medium is <code>110 10 0 0010111110</code> = <code>$D0BE</code>, so the instruction is <code>CC D0 BE</code>. The interpreter moves only one arm or head motor at a time and queues the rest.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Op</th><th>Operand</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td class="op">C3 / CC</td><td>ss ii</td><td>Motor to absolute position, then wait / continue</td></tr>
+      <tr><td class="op">D3 / DC</td><td>ss ii</td><td>Motor relative move, then wait / continue</td></tr>
+      <tr><td class="op">E3 / EC · F3 / FC</td><td>oo · aaaa</td><td>Motor absolute, motor word in memory (indexed · extended)</td></tr>
+      <tr><td class="op">FD</td><td>7 bytes</td><td>Extend, shoulder, rotate, pivot, gripper, head, steering to absolute positions</td></tr>
+      <tr><td class="op">61 / 62 · 71 / 72</td><td>oo · aaaa</td><td>Speak phonemes (ending in FF), continue / wait</td></tr>
+      <tr><td class="op">BF</td><td>aaaa</td><td>Inside a phoneme string: jump to another string and come back (eight deep)</td></tr>
+      <tr><td class="op">1C 1D 1E 1F</td><td>oo</td><td>Branch if drive / steering / arm / speech busy</td></tr>
+      <tr><td class="op">87 · 8F</td><td>iiii</td><td>Sleep in 10 s units (Sleep switch set) · pause in 1/16 s units</td></tr>
+      <tr><td class="op">41 42 45 4B 4E</td><td></td><td>Enable light, sound, sonar, motion, display (51 52 5B 55 5E disable)</td></tr>
+      <tr><td class="op">02 03 04 05</td><td></td><td>Abort drive, steering, arm, speech</td></tr>
+      <tr><td class="op">21 · 83 · 3A</td><td></td><td>Zero (home all motors) · switch to Machine Language · return to executive</td></tr>
+    </tbody>
+  </table></div>
+  <h3>ROM services</h3>
+  <p>The monitor ROM exports a handful of display and keypad routines that programs call with JSR, in the same style as the ET-3400. OUTCH and OUTSTR take raw segment patterns rather than ASCII: bit 6 is segment a through bit 0 for g, and bit 7 is the decimal point, which OUTSTR also uses to mark the end of a string. "H" is <code>$37</code>.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Routine</th><th>Address</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td class="op">INCH</td><td class="mono">$F777</td><td>Wait for a debounced key; return it in A</td></tr>
+      <tr><td class="op">OUTCH</td><td class="mono">$F7C8</td><td>Light the segments in A at the next digit</td></tr>
+      <tr><td class="op">OUTHEX · OUTBYT</td><td class="mono">$F7B5 · $F7AD</td><td>Show the low nibble of A · both nibbles of A</td></tr>
+      <tr><td class="op">OUTSTR</td><td class="mono">$F7E5</td><td>Show the segment string following the JSR; the decimal point ends it</td></tr>
+      <tr><td class="op">CLRDIS · REDIS</td><td class="mono">$F65B · $F64E</td><td>Blank the display and home the cursor · home the cursor</td></tr>
+      <tr><td class="op">DSPLAY</td><td class="mono">$F6F9</td><td>Show B bytes (1–3) starting at X</td></tr>
+    </tbody>
+  </table></div>
+</section>
+</main>
+
+<section id="emulator" class="wide">
+  <div class="sec-head"><span class="label">8 · Emulator</span><h2>Run HERO 1 in the browser</h2>
+    <p style="max-width:46rem">Load Heath's original system ROM and this is a HERO 1: a 6808 running the 1982 firmware against emulated keypad, display latches, steppers, drive encoder, sonar, sense board, clock and SC-01. It boots to <code>HEro 1.0</code> and says "ready". Pick a program and press <b>Type it for me</b> to watch the key sequence an owner would enter, or drive the keypad yourself: 1 (Machine) or A (Robot), then D and the four-digit start address. To key in your own code: 1, A, an address, then the bytes. Without a ROM file the page falls back to a JavaScript stand-in for the firmware.</p></div>
+  <div class="emu">
+    <div class="headpanel">
+      <div class="seg"><svg id="seg" viewBox="0 0 300 64" aria-label="Six-digit LED display"></svg></div>
+      <div class="keys" id="keys"></div>
+      <div class="xbtn">
+        <button id="b-abort" type="button" title="Abort button on the experimental board">ABORT</button>
+        <button id="b-trigger" type="button" title="Teaching pendant trigger (interrupt)">TRIGGER</button>
+        <button id="b-clap" type="button" title="A loud sound at the microphone">CLAP</button>
+        <button id="b-motion" type="button" title="Something moves in front of the motion detector">WALK PAST</button>
+        <button id="b-init" type="button" title="Executive keys 3, 1: home every motor" style="grid-column:1/-1">INITIALIZE (3 · 1)</button>
+        <label for="light" style="grid-column:1/-1">LIGHT <input id="light" type="range" min="0" max="255" value="96"></label>
+        <label for="sleep" style="grid-column:1/-1"><input id="sleep" type="checkbox"> SLEEP SWITCH AT SLEEP</label>
+      </div>
+      <p class="panel-note">Keypad layout follows Heath's block diagram. ABORT halts and shows the program counter.</p>
+    </div>
+    <div class="stage">
+      <div class="loader">
+        <div class="loader-row">
+          <span class="pill" id="rom-pill">ROM STAND-IN</span>
+          <label class="filebtn" for="rom-file">Load HERO.ROM</label><input id="rom-file" type="file" accept=".rom,.bin,.ROM">
+          <button id="b-forget" type="button" hidden>Forget ROM</button>
+        </div>
+        <span class="src" id="rom-status"></span>
+        <div class="loader-row">
+          <select id="prog" aria-label="Program"></select>
+          <button id="b-load" type="button">Load into RAM</button>
+          <button id="b-type" type="button" class="go">Type it for me</button>
+          <button id="b-home" type="button">Put robot back</button>
+        </div>
+        <span class="src" id="prog-src"></span>
+        <span class="src" id="prog-note"></span>
+        <span class="seq" id="prog-seq"></span>
+      </div>
+      <canvas id="room" width="640" height="380" aria-label="Top-down view of the robot in a room with two boxes"></canvas>
+      <div class="statusline"><span class="pill" id="mode-pill">EXECUTIVE</span><span id="cyc"></span><span class="speech" id="speech" aria-live="polite"></span></div>
+      <div class="emu-row">
+        <div class="listing" id="listing" aria-label="Disassembly"></div>
+        <div class="side"><div class="kv" id="regs"></div><div class="kv" id="mpos"></div></div>
+      </div>
+      <div class="log" id="log" aria-live="polite"></div>
+    </div>
+  </div>
+  <div class="col" style="margin-top:1rem;display:grid;gap:.8rem">
+    <div class="note"><span class="label">How faithful is it?</span>
+      <p>The CPU is a complete MC6800 core: all 197 opcodes, Motorola's cycle counts and condition codes, checked against 200,000 random instructions on Joe Allen's EXORsim. The only differences were three places where EXORsim departs from Motorola's Programming Reference Manual.</p>
+      <p>With the ROM loaded, everything a HERO program sees is Heath's own code: the executive, monitor, keypad debounce, display routines, Robot Interpreter, motor ramps, speech sequencing and interrupt dispatch. The emulator only supplies the hardware. Its behavior was recovered from the schematics, the FAQ port map and the ROM itself: which keypad line each key pulls low, how the 74LS259 latches map to segments, the stepper phase sequences and gear ratios, the drive's PWM and ramp, the eight interrupt flip-flops at $C200, the SC-01 request handshake, and the MSM5832 clock, which reads your computer's time.</p>
+      <p>Physical scales are estimates: inches per drive encoder count, the sonar's range units, motor speeds on the floor, and the steering geometry. The robot starts as if it had been initialized earlier, because HERO's RAM survives sleep. Press INITIALIZE to watch the ROM home every axis.</p>
+      <p>The ROM file is not part of this page. Heath released the HERO ROMs for not-for-profit use by owners; load your own copy (an 8 KB dump of U418, SHA-1 4c5f5a06…661d for version 1.0). The page keeps it in this browser only.</p>
+    </div>
+  </div>
+</section>
+
+<main class="col">
+<section id="family">
+  <div class="sec-head"><span class="label">9 · The family</span><h2>What came after</h2></div>
+</section>
+</main>
+<div class="wide" style="margin-top:1.1rem">
+  <div class="family">
+    <article><h3>HERO 1 <span>1982</span></h3><p>The educational original. 6808, 4 KB RAM, arm, sonar, SC-01 voice. About 14,000 sold.</p></article>
+    <article><h3>HERO Jr. <span>1984</span></h3><p>A home robot from Heath's consumer division with a preprogrammed personality: songs, games, guard duty, alarm clock. 6808, 2 KB RAM, 32 KB ROM, no arm. About 4,000 sold.</p></article>
+    <article><h3>HERO 2000 <span>1986</span></h3><p>An 8088 master with up to eleven slave processors, BASIC in 64 KB of ROM, a card cage, 360° sonar, an optional arm and a floppy drive. About 3,000 sold.</p></article>
+    <article><h3>HE-RObot <span>2007</span></h3><p>A revival built with White Box Robotics on a Windows XP PC. Up to $8,000; about 50 sold before Heathkit's 2012 bankruptcy.</p></article>
+  </div>
+</div>
+
+<main class="col">
+<section id="sources">
+  <div class="sec-head"><span class="label">Sources</span><h2>Where this comes from</h2></div>
+  <ol class="sources">
+    <li><a href="https://archive.org/details/heathkit-hero-1-ET-18">HEATHKIT HERO-1 ET-18 Robot Manuals and Schematics</a>, archive.org: Technical Manual (theory of operation, Robot Interpreter, ROM routines, parts lists), schematics, block diagram.</li>
+    <li><a href="https://en.wikipedia.org/wiki/HERO_(robot)">HERO (robot)</a>, Wikipedia: dates, prices, sales for all models.</li>
+    <li><a href="http://hero.dsavage.net/robots/Hero_FAQ.html">Hero Robot FAQ</a>, Donnie V. Savage: options, memory and port maps, ROM versions, crystal notes, errata.</li>
+    <li><a href="https://www.csmonitor.com/1982/1206/120640.html">"R2D2 for businessmen — and do-it-yourselfers"</a>, Christian Science Monitor, Dec 6, 1982.</li>
+    <li><a href="https://www.atarimagazines.com/creative/v9n11/333_Robotics_and_industrial_e.php">Review of Heath's robotics course</a>, Creative Computing, Nov 1983: course content and component prices.</li>
+    <li><a href="https://k5nd.net/2020/06/heathkit-educational-systems-personal-insight/">Heathkit Educational Systems, a personal insight</a>: Frenzel and Wilson on the education division and the robot.</li>
+    <li><a href="https://www.electronicdesign.com/technologies/analog/article/21801229/whatever-happened-to-heathkit">Frenzel, "Whatever Happened To Heathkit?"</a> and <a href="https://www.electronicdesign.com/blogs/contributed-blogs/archive/communiqu/article/21802667/robots-best-educational-platform-ever">"Robots: Best Educational Platform Ever"</a>, Electronic Design.</li>
+    <li><a href="https://retrotechnology.com/restore/heath_robot.html">Robert Doerr on the HERO line after Heath</a>.</li>
+    <li><a href="https://en.wikipedia.org/wiki/Motorola_6800">Motorola 6800</a>, Wikipedia; Motorola M6800 Programming Reference Manual (1976): instruction definitions used for the CPU core.</li>
+    <li><a href="https://openlab.citytech.cuny.edu/superhero/overview/">City Tech Super HERO</a>, CUNY; <a href="https://ro.uow.edu.au/compsciwp/9">Fulcher, University of Wollongong, 1984</a>; <a href="https://stars.library.ucf.edu/rtd/4833">Fischoff, UCF thesis, 1985</a>; <a href="https://koreascience.kr/article/JAKO198711919593931.pub?lang=en">KIEE Transactions, 1987</a>; <a href="https://support.dce.felk.cvut.cz/mediawiki/images/5/5c/Pr_zeman.pdf">Zeman, ČVUT Prague, 2010</a>.</li>
+    <li><a href="https://www.raspberry-pi-geek.com/index.php/Archive/2015/13/SunRover-part-1-Track-motor-controller-power-system">Raspberry Pi Geek, 2015</a>; <a href="https://www.atarimagazines.com/compute/issue41/On_The_Road.php">COMPUTE!, Oct 1983</a>; <a href="https://vintagecomputer.ca/heathkit-hero-1-et-18-robot/">vintagecomputer.ca</a>: classroom anecdotes.</li>
+    <li><a href="https://github.com/jhallen/exorsim">EXORsim</a>, Joseph H. Allen: reference 6800 simulator used to test the CPU core.</li>
+    <li><a href="https://classic.technology/heathkit-hero-1/">Heathkit Hero 1, Robot and Course</a>: 1983 brochure scan.</li>
+  </ol>
+  <footer>Flintridge Software · retro computing notes · October 2026</footer>
+</section>
+</main>
+
+<script>
+/* MC6800 / MC6808 CPU core.
+ * bus = { read(addr) -> byte, write(addr, byte) }
+ * step() executes one instruction and returns its cycle count.
+ * Undefined opcodes call onIllegal(op, pc) (default: throw); the HERO machine
+ * uses that hook for Robot Interpreter opcodes. */
+function M6800(bus) {
+  this.bus = bus;
+  this.a = 0; this.b = 0; this.x = 0; this.sp = 0; this.pc = 0;
+  this.h = 0; this.i = 1; this.n = 0; this.z = 0; this.v = 0; this.c = 0;
+  this.waiting = false;
+  this.onIllegal = function (op, pc) { throw new Error("illegal opcode " + op.toString(16) + " at " + pc.toString(16)); };
+}
+(function (P) {
+  // cycle counts, 0 = undefined opcode
+  var CY = [
+  //0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
+    0, 2, 0, 0, 0, 0, 2, 2, 4, 4, 2, 2, 2, 2, 2, 2, // 0
+    2, 2, 0, 0, 0, 0, 2, 2, 0, 2, 0, 2, 0, 0, 0, 0, // 1
+    4, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, // 2
+    4, 4, 4, 4, 4, 4, 4, 4, 0, 5, 0,10, 0, 0, 9,12, // 3
+    2, 0, 0, 2, 2, 0, 2, 2, 2, 2, 2, 0, 2, 2, 0, 2, // 4
+    2, 0, 0, 2, 2, 0, 2, 2, 2, 2, 2, 0, 2, 2, 0, 2, // 5
+    7, 0, 0, 7, 7, 0, 7, 7, 7, 7, 7, 0, 7, 7, 4, 7, // 6
+    6, 0, 0, 6, 6, 0, 6, 6, 6, 6, 6, 0, 6, 6, 3, 6, // 7
+    2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 2, 2, 3, 8, 3, 0, // 8
+    3, 3, 3, 0, 3, 3, 3, 4, 3, 3, 3, 3, 4, 0, 4, 5, // 9
+    5, 5, 5, 0, 5, 5, 5, 6, 5, 5, 5, 5, 6, 8, 6, 7, // A
+    4, 4, 4, 0, 4, 4, 4, 5, 4, 4, 4, 4, 5, 9, 5, 6, // B
+    2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 2, 2, 0, 0, 3, 0, // C
+    3, 3, 3, 0, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 4, 5, // D
+    5, 5, 5, 0, 5, 5, 5, 6, 5, 5, 5, 5, 0, 0, 6, 7, // E
+    4, 4, 4, 0, 4, 4, 4, 5, 4, 4, 4, 4, 0, 0, 5, 6  // F
+  ];
+  P.CYCLES = CY;
+  P.isDefined = function (op) { return CY[op] !== 0; };
+
+  P.rd = function (a) { return this.bus.read(a & 0xFFFF) & 0xFF; };
+  P.wr = function (a, v) { this.bus.write(a & 0xFFFF, v & 0xFF); };
+  P.rd16 = function (a) { return (this.rd(a) << 8) | this.rd(a + 1); };
+  P.fetch = function () { var v = this.rd(this.pc); this.pc = (this.pc + 1) & 0xFFFF; return v; };
+  P.fetch16 = function () { var v = this.rd16(this.pc); this.pc = (this.pc + 2) & 0xFFFF; return v; };
+  P.push = function (v) { this.wr(this.sp, v); this.sp = (this.sp - 1) & 0xFFFF; };
+  P.pull = function () { this.sp = (this.sp + 1) & 0xFFFF; return this.rd(this.sp); };
+  P.push16 = function (v) { this.push(v & 0xFF); this.push(v >> 8); };
+  P.pull16 = function () { var hi = this.pull(); return (hi << 8) | this.pull(); };
+
+  P.getCC = function () {
+    return 0xC0 | (this.h << 5) | (this.i << 4) | (this.n << 3) | (this.z << 2) | (this.v << 1) | this.c;
+  };
+  P.setCC = function (f) {
+    this.h = (f >> 5) & 1; this.i = (f >> 4) & 1; this.n = (f >> 3) & 1;
+    this.z = (f >> 2) & 1; this.v = (f >> 1) & 1; this.c = f & 1;
+  };
+  P.nz = function (r) { this.n = (r >> 7) & 1; this.z = (r & 0xFF) === 0 ? 1 : 0; };
+  P.nz16 = function (r) { this.n = (r >> 15) & 1; this.z = (r & 0xFFFF) === 0 ? 1 : 0; };
+
+  P.add = function (a, b, cin) {
+    var r = a + b + cin;
+    this.h = ((a ^ b ^ r) >> 4) & 1;
+    this.v = (((a ^ r) & (b ^ r)) >> 7) & 1;
+    this.c = (r >> 8) & 1; r &= 0xFF; this.nz(r); return r;
+  };
+  P.sub = function (a, b, cin) {
+    var r = a - b - cin;
+    this.v = (((a ^ b) & (a ^ r)) >> 7) & 1;
+    this.c = r < 0 ? 1 : 0; r &= 0xFF; this.nz(r); return r;
+  };
+  P.logic = function (r) { this.nz(r); this.v = 0; return r; };
+
+  // read-modify-write group (NEG..CLR); op low nibble selects function
+  P.rmw = function (lo, m) {
+    var r;
+    switch (lo) {
+      case 0x0: r = (-m) & 0xFF; this.c = r !== 0 ? 1 : 0; this.v = r === 0x80 ? 1 : 0; this.nz(r); return r;      // NEG
+      case 0x3: r = (~m) & 0xFF; this.c = 1; this.v = 0; this.nz(r); return r;                                    // COM
+      case 0x4: this.c = m & 1; r = m >> 1; this.nz(r); this.v = this.n ^ this.c; return r;                       // LSR
+      case 0x6: r = (this.c << 7) | (m >> 1); this.c = m & 1; this.nz(r); this.v = this.n ^ this.c; return r;    // ROR
+      case 0x7: this.c = m & 1; r = (m & 0x80) | (m >> 1); this.nz(r); this.v = this.n ^ this.c; return r;       // ASR
+      case 0x8: this.c = (m >> 7) & 1; r = (m << 1) & 0xFF; this.nz(r); this.v = this.n ^ this.c; return r;      // ASL
+      case 0x9: r = ((m << 1) | this.c) & 0xFF; this.c = (m >> 7) & 1; this.nz(r); this.v = this.n ^ this.c; return r; // ROL
+      case 0xA: r = (m - 1) & 0xFF; this.v = m === 0x80 ? 1 : 0; this.nz(r); return r;                           // DEC
+      case 0xC: r = (m + 1) & 0xFF; this.v = m === 0x7F ? 1 : 0; this.nz(r); return r;                           // INC
+      case 0xD: this.nz(m); this.v = 0; this.c = 0; return -1;                                                   // TST (no write)
+      case 0xF: this.n = 0; this.z = 1; this.v = 0; this.c = 0; return 0;                                         // CLR
+    }
+    return -2;
+  };
+
+  P.branch = function (op) {
+    var c;
+    switch (op) {
+      case 0x20: c = true; break;
+      case 0x22: c = (this.c | this.z) === 0; break;
+      case 0x23: c = (this.c | this.z) === 1; break;
+      case 0x24: c = this.c === 0; break;
+      case 0x25: c = this.c === 1; break;
+      case 0x26: c = this.z === 0; break;
+      case 0x27: c = this.z === 1; break;
+      case 0x28: c = this.v === 0; break;
+      case 0x29: c = this.v === 1; break;
+      case 0x2A: c = this.n === 0; break;
+      case 0x2B: c = this.n === 1; break;
+      case 0x2C: c = (this.n ^ this.v) === 0; break;
+      case 0x2D: c = (this.n ^ this.v) === 1; break;
+      case 0x2E: c = (this.z | (this.n ^ this.v)) === 0; break;
+      case 0x2F: c = (this.z | (this.n ^ this.v)) === 1; break;
+    }
+    return c;
+  };
+
+  P.interrupt = function (vector) {
+    if (!this.waiting) { this.push16(this.pc); this.push16(this.x); this.push(this.a); this.push(this.b); this.push(this.getCC()); }
+    this.waiting = false; this.i = 1; this.pc = this.rd16(vector);
+  };
+  P.irq = function () { if (this.i) return false; this.interrupt(0xFFF8); return true; };
+  P.nmi = function () { this.interrupt(0xFFFC); };
+  P.reset = function () { this.i = 1; this.waiting = false; this.pc = this.rd16(0xFFFE); };
+
+  P.step = function () {
+    if (this.waiting) return 1;
+    var pc0 = this.pc, op = this.fetch(), cy = CY[op], ea, m, r, t, hi = op >> 4, lo = op & 0xF;
+    if (cy === 0) { this.pc = pc0; return this.onIllegal(op, pc0) || 0; }
+
+    if (hi >= 8) {
+      // accumulator/memory group
+      var acc = hi >= 0xC ? "b" : "a", mode = hi & 3;
+      // 16-bit ops: CPX(8C..BC) LDS(8E..BE) STS(9F..BF) LDX(CE..FE) STX(DF..FF) BSR(8D) JSR(AD BD)
+      if (lo >= 0xC) {
+        if (op === 0x8D) { t = this.fetch(); this.push16(this.pc); this.pc = (this.pc + (t < 128 ? t : t - 256)) & 0xFFFF; return cy; }
+        if (op === 0xAD || op === 0xBD) { ea = op === 0xAD ? (this.x + this.fetch()) & 0xFFFF : this.fetch16(); this.push16(this.pc); this.pc = ea; return cy; }
+        ea = mode === 0 ? (this.pc = (this.pc + 2) & 0xFFFF, (this.pc - 2) & 0xFFFF)
+           : mode === 1 ? this.fetch() : mode === 2 ? (this.x + this.fetch()) & 0xFFFF : this.fetch16();
+        if (lo === 0xC) { // CPX
+          m = this.rd16(ea); r = this.x - m;
+          var xh = this.x >> 8, mh = m >> 8, rh = (xh - mh) & 0xFF;
+          this.n = (rh >> 7) & 1; this.z = (r & 0xFFFF) === 0 ? 1 : 0;
+          this.v = (((xh ^ mh) & (xh ^ rh)) >> 7) & 1;
+          return cy;
+        }
+        if (lo === 0xE) { r = this.rd16(ea); if (hi < 0xC) this.sp = r; else this.x = r; this.nz16(r); this.v = 0; return cy; }
+        if (lo === 0xF) { r = hi < 0xC ? this.sp : this.x; this.wr(ea, r >> 8); this.wr(ea + 1, r); this.nz16(r); this.v = 0; return cy; }
+      }
+      if (lo === 7) { // STA
+        ea = mode === 1 ? this.fetch() : mode === 2 ? (this.x + this.fetch()) & 0xFFFF : this.fetch16();
+        this.wr(ea, this[acc]); this.logic(this[acc]); return cy;
+      }
+      m = mode === 0 ? this.fetch() : this.rd(mode === 1 ? this.fetch() : mode === 2 ? (this.x + this.fetch()) & 0xFFFF : this.fetch16());
+      t = this[acc];
+      switch (lo) {
+        case 0x0: this[acc] = this.sub(t, m, 0); break;          // SUB
+        case 0x1: this.sub(t, m, 0); break;                      // CMP
+        case 0x2: this[acc] = this.sub(t, m, this.c); break;     // SBC
+        case 0x4: this[acc] = this.logic(t & m); break;          // AND
+        case 0x5: this.logic(t & m); break;                      // BIT
+        case 0x6: this[acc] = this.logic(m); break;              // LDA
+        case 0x8: this[acc] = this.logic(t ^ m); break;          // EOR
+        case 0x9: this[acc] = this.add(t, m, this.c); break;     // ADC
+        case 0xA: this[acc] = this.logic(t | m); break;          // ORA
+        case 0xB: this[acc] = this.add(t, m, 0); break;          // ADD
+      }
+      return cy;
+    }
+    if (hi === 4 || hi === 5) {
+      var k = hi === 4 ? "a" : "b"; r = this.rmw(lo, this[k]); if (r >= 0) this[k] = r; return cy;
+    }
+    if (hi === 6 || hi === 7) {
+      ea = hi === 6 ? (this.x + this.fetch()) & 0xFFFF : this.fetch16();
+      if (lo === 0xE) { this.pc = ea; return cy; }   // JMP
+      if (lo === 0xF) { this.rmw(lo, 0); this.wr(ea, 0); return cy; }
+      r = this.rmw(lo, this.rd(ea)); if (r >= 0) this.wr(ea, r); return cy;
+    }
+    if (hi === 2) { t = this.fetch(); if (this.branch(op)) this.pc = (this.pc + (t < 128 ? t : t - 256)) & 0xFFFF; return cy; }
+    switch (op) {
+      case 0x01: break;
+      case 0x06: this.setCC(this.a); break;                       // TAP
+      case 0x07: this.a = this.getCC(); break;                    // TPA
+      case 0x08: this.x = (this.x + 1) & 0xFFFF; this.z = this.x === 0 ? 1 : 0; break;
+      case 0x09: this.x = (this.x - 1) & 0xFFFF; this.z = this.x === 0 ? 1 : 0; break;
+      case 0x0A: this.v = 0; break; case 0x0B: this.v = 1; break;
+      case 0x0C: this.c = 0; break; case 0x0D: this.c = 1; break;
+      case 0x0E: this.i = 0; break; case 0x0F: this.i = 1; break;
+      case 0x10: this.a = this.sub(this.a, this.b, 0); break;     // SBA
+      case 0x11: this.sub(this.a, this.b, 0); break;              // CBA
+      case 0x16: this.b = this.logic(this.a); break;              // TAB
+      case 0x17: this.a = this.logic(this.b); break;              // TBA
+      case 0x19: {                                                // DAA
+        var a = this.a, cf = 0, l = a & 0xF, u = a >> 4;
+        if (this.h || l > 9) cf |= 0x06;
+        if (this.c || u > 9 || (u > 8 && l > 9)) cf |= 0x60;
+        r = a + cf; if (cf & 0x60) this.c = 1;
+        this.v = (((a ^ r) & (cf ^ r)) >> 7) & 1;
+        this.a = r & 0xFF; this.nz(this.a); break; }
+      case 0x1B: this.a = this.add(this.a, this.b, 0); break;     // ABA
+      case 0x30: this.x = (this.sp + 1) & 0xFFFF; break;          // TSX
+      case 0x31: this.sp = (this.sp + 1) & 0xFFFF; break;         // INS
+      case 0x32: this.a = this.pull(); break;
+      case 0x33: this.b = this.pull(); break;
+      case 0x34: this.sp = (this.sp - 1) & 0xFFFF; break;         // DES
+      case 0x35: this.sp = (this.x - 1) & 0xFFFF; break;          // TXS
+      case 0x36: this.push(this.a); break;
+      case 0x37: this.push(this.b); break;
+      case 0x39: this.pc = this.pull16(); break;                  // RTS
+      case 0x3B: this.setCC(this.pull()); this.b = this.pull(); this.a = this.pull(); this.x = this.pull16(); this.pc = this.pull16(); break;
+      case 0x3E: this.push16(this.pc); this.push16(this.x); this.push(this.a); this.push(this.b); this.push(this.getCC()); this.waiting = true; break;
+      case 0x3F: this.push16(this.pc); this.push16(this.x); this.push(this.a); this.push(this.b); this.push(this.getCC()); this.i = 1; this.pc = this.rd16(0xFFFA); break;
+    }
+    return cy;
+  };
+})(M6800.prototype);
+if (typeof module !== "undefined") module.exports = M6800;
+
+</script>
+<script>
+/* HERO 1 machine model: 6808 + 4 KB RAM + high-level emulation of the 8 KB system ROM.
+ * The ROM image is not publicly available, so its documented services
+ * (executive/monitor keypad modes, display subroutines, Robot Interpreter,
+ * interrupt dispatch) are implemented here in JavaScript, following the
+ * ET-18 Technical Manual. Requires M6800 (cpu6800.js). */
+(function (root) {
+"use strict";
+var M6800 = root.M6800 || (typeof require !== "undefined" ? require("./cpu6800.js") : null);
+
+var CLOCK = 3579545 / 4;                 // 3.58 MHz crystal, divided by four inside the 6808
+var ROBOT_OVERHEAD = 740;                // extra cycles per interpreted instruction (manual: 6000-pass loop 41 s vs 0.3 s)
+var MOT = ["Drive", "Extend", "Shoulder", "Wrist rotate", "Wrist pivot", "Gripper", "Head", "Steering"];
+var MAXP = [1023, 0x98, 0x86, 0x93, 0xA5, 0x75, 0xC2, 0x93];
+var MID  = [0, 0x4C, 0x43, 0x49, 0x52, 0x3A, 0x61, 0x49];   // positions after ZERO (illustrative mid-travel)
+var SPEED = { arm: [8, 8, 16, 32], drive: [18, 18, 36, 72] }; // units per second for ss = 00,01,10,11
+var DRIVE_IN = 0.2;                       // inches per drive unit (illustrative)
+var PH = ["EH3","EH2","EH1","PA0","DT","A1","A2","ZH","AH2","I3","I2","I1","M","N","B","V","CH","SH","Z","AW1","NG","AH1","OO1","OO","L","K","J","H","G","F","D","S","A","AY","Y1","UH3","AH","P","O","I","U","Y","T","R","E","W","AE","AE1","AW2","UH2","UH1","UH","O2","O1","IU","U1","THV","TH","ER","EH","E1","AW","PA1","STOP"];
+// SC-01 phoneme durations in ms (Votrax data sheet, nominal)
+var PDUR = [59,71,121,47,47,71,103,90,71,55,80,121,103,80,71,71,71,121,71,146,121,146,103,185,103,80,47,71,71,103,55,90,185,65,80,47,250,103,185,103,185,103,71,90,185,80,185,103,90,71,103,185,80,121,59,90,80,71,146,185,121,250,185,47];
+var HEXSEG = [0x7E,0x30,0x6D,0x79,0x33,0x5B,0x5F,0x70,0x7F,0x7B,0x77,0x1F,0x4E,0x3D,0x4F,0x47];
+// segment bits per the manual's Figure 1: bit6 a, 5 b, 4 c, 3 d, 2 e, 1 f, 0 g, 7 decimal point
+var TXT = { r:0x05, E:0x4F, A:0x77, d:0x3D, y:0x3B, o:0x1D, b:0x1F, t:0x0F, P:0x67, "6":0x5F, "8":0x7F, "0":0x7E, " ":0, "-":0x01, n:0x15, H:0x37, L:0x0E, S:0x5B, U:0x3E, C:0x4E, c:0x0D, I:0x30 };
+var ROM = { INCH:0xF777, OUTCH:0xF7C8, OUTHEX:0xF7B5, OUTBYT:0xF7AD, CLRDIS:0xF65B, REDIS:0xF64E, OUTSTR:0xF7E5, DSPLAY:0xF6F9, IRQRET:0xFFE0 };
+var ROBOT_OPS = {0x02:1,0x03:1,0x04:1,0x05:1,0x1C:2,0x1D:2,0x1E:2,0x1F:2,0x21:1,0x3A:1,0x41:1,0x42:1,0x45:1,0x4B:1,0x4E:1,0x51:1,0x52:1,0x55:1,0x5B:1,0x5E:1,
+  0x61:2,0x62:2,0x71:3,0x72:3,0x83:1,0x87:3,0x8F:3,0xC3:3,0xCC:3,0xD3:3,0xDC:3,0xE3:2,0xEC:2,0xF3:3,0xFC:3,0xFD:8};
+
+function Hero() {
+  var self = this;
+  this.ram = new Uint8Array(0x1000);
+  this.cpu = new M6800({ read: function (a) { return self.read(a); }, write: function (a, v) { self.write(a, v); } });
+  this.cpu.onIllegal = function (op, pc) { self.crash("Illegal 6800 opcode $" + hex(op, 2) + " at $" + hex(pc, 4) + ". Robot Language opcodes need the interpreter: precede them with 3F (SWI)."); return 2; };
+  this.listeners = [];
+  this.world = { x: 160, y: 300, th: 0, trail: [], walls: [[0,0,640,0],[640,0,640,380],[640,380,0,380],[0,380,0,0],[430,110,520,110],[520,110,520,180],[520,180,430,180],[430,180,430,110],[90,60,170,60],[170,60,170,95],[170,95,90,95],[90,95,90,60]] };
+  this.powerOn();
+}
+var H = Hero.prototype;
+function hex(v, n) { return (v >>> 0).toString(16).toUpperCase().padStart(n, "0"); }
+Hero.hex = hex; Hero.MOT = MOT; Hero.MAXP = MAXP; Hero.PH = PH; Hero.ROM = ROM; Hero.ROBOT_OPS = ROBOT_OPS; Hero.CLOCK = CLOCK;
+
+H.emit = function (type, msg) { this.listeners.forEach(function (f) { f(type, msg); }); };
+H.log = function (m) { this.emit("log", m); };
+
+H.powerOn = function () {
+  this.ram.fill(0);
+  for (var k = 0x30; k <= 0x38; k += 3) this.ram[k] = 0x3A;   // user keys: return to executive until programmed
+  this.pos = MID.slice(); this.tgt = MID.slice(); this.spd = [0,0,0,0,0,0,0,0];
+  this.armQueue = []; this.armActive = -1;
+  this.sense = { light: false, sound: false, sonar: false, motion: false, display: true };
+  this.levels = { light: 0x60, sound: 0x10 };
+  this.irqFlags = 0; this.sleepSwitch = false;
+  this.time = 0; this.cycles = 0; this.lastSonar = 0;
+  this.speech = null; this.phrase = "";
+  this.reset();
+};
+
+H.reset = function () {
+  this.mode = "exec"; this.robot = false; this.block = null; this.keys = []; this.entry = null;
+  this.ram[0x27] = this.ram[0x2A] = this.ram[0x2D] = 0x39;      // interrupt vectors reset to RTS
+  this.cpu.sp = 0x0EDE; this.cpu.i = 1; this.cpu.waiting = false;
+  for (var m = 0; m < 8; m++) this.tgt[m] = this.pos[m];
+  this.armQueue = []; this.armActive = -1; this.speech = null;
+  this.show("rEAdy ");
+  this.emit("state");
+};
+
+/* ---------------- memory map ---------------- */
+H.read = function (a) {
+  if (a < 0x1000) return this.ram[a];
+  if (a >= 0xC000 && a < 0xC400) return this.ioRead(a);
+  return 0xFF;                       // unmapped, or ROM data we do not have
+};
+H.write = function (a, v) {
+  if (a < 0x1000) { this.ram[a] = v; return; }
+  if (a === 0xC200) { this.irqFlags &= ~v; return; }   // writing 1s clears interrupt flags
+};
+H.ioRead = function (a) {
+  switch (a) {
+    case 0xC200: return this.irqFlags;
+    case 0xC240: return this.sense.sound ? this.levels.sound : this.sense.light ? this.levels.light : 0;
+    case 0xC220: return this.ram[0x11];
+  }
+  return 0xFF;
+};
+
+/* ---------------- display ---------------- */
+H.seg = [0,0,0,0,0,0]; H.dig = 0;
+H.show = function (s) { this.seg = []; for (var i = 0; i < 6; i++) this.seg.push(TXT[s[i]] !== undefined ? TXT[s[i]] : HEXSEG[parseInt(s[i], 16)] || 0); this.dig = 0; this.emit("display"); };
+H.showHex = function (prefix, val, n) { var s = prefix + hex(val, n); this.seg = []; for (var i = 0; i < 6; i++) { var c = s[i] || " "; this.seg.push(/[0-9A-F]/.test(c) ? HEXSEG[parseInt(c, 16)] : (TXT[c] || 0)); } this.emit("display"); };
+H.outch = function (v) { if (this.dig < 6) this.seg[this.dig] = v; this.dig = (this.dig + 1) % 6; this.emit("display"); };
+
+/* ---------------- keypad (executive and monitor, as described in the manual) ---------------- */
+H.key = function (k) {   // k: 0..15, or "RESET"
+  if (k === "RESET") { this.log("RESET"); this.reset(); return; }
+  if (this.mode === "run") { this.keys.push(k); return; }
+  var e = this.entry;
+  if (e) {                               // collecting hex digits
+    e.buf += hex(k, 1);
+    if (e.kind === "addr") { this.showHex("", 0, 0); this.show((e.buf + "----").slice(0, 4) + "  "); if (e.buf.length === 4) { this.entry = null; e.done(parseInt(e.buf, 16)); } }
+    else { this.showHex(hex(this.ea, 4), parseInt((e.buf + "0").slice(0, 2), 16), 2); if (e.buf.length === 2) { this.entry = null; e.done(parseInt(e.buf, 16)); } }
+    return;
+  }
+  if (this.mode === "exec") {
+    if (k === 1) { this.robot = false; this.mode = "mon"; this.show("6808  "); }
+    else if (k === 0xA) { this.robot = true; this.mode = "mon"; this.show("robot "); }
+    else if (k === 0xF || k === 0xC || k === 9) { this.run({ 0xF: 0x30, 0xC: 0x33, 9: 0x36 }[k], true); }
+    else if (k === 3) { this.mode = "util"; this.show("Ut    "); }
+    return;
+  }
+  if (this.mode === "util") {
+    if (k === 1) { this.ram[0x0EC0] = 0x21; this.ram[0x0EC1] = 0x3A; this.run(0x0EC0, true); this.log("Utility 31: initialize (ZERO)"); }
+    else if (k === 2) { this.armQueue = []; [1,2,3,4,5].forEach(function (m) { this.queueArm(m, MID[m], 2); }, this); this.mode = "exec"; this.show("rEAdy "); }
+    return;
+  }
+  if (this.mode === "mon" || this.mode === "exam") {
+    var self = this;
+    if (this.mode === "exam") {
+      if (k === 0xF) { this.ea = (this.ea + 1) & 0xFFFF; this.showEA(); return; }
+      if (k === 0xB) { this.ea = (this.ea - 1) & 0xFFFF; this.showEA(); return; }
+      if (k === 0xC) { this.entry = { kind: "data", buf: "", done: function (v) { self.write(self.ea, v); self.showEA(); self.emit("mem"); } }; this.showHex(hex(this.ea, 4), 0, 0); return; }
+    }
+    if (k === 0xA) { this.mode = "auto"; this.prompt(function (a) { self.ea = a; self.autoNext(); }); return; }
+    if (k === 0xD) { this.prompt(function (a) { self.run(a, self.robot); }); return; }
+    if (k === 0xE) { this.prompt(function (a) { self.ea = a; self.mode = "exam"; self.showEA(); }); return; }
+    if (k >= 1 && k <= 4) { var c = this.cpu, v = [0, c.a, c.b, c.pc, c.x][k]; this.showHex(["", "A   ", "b   ", "PC", "-"][k].slice(0, k === 3 ? 2 : k === 4 ? 2 : 4), v, k >= 3 ? 4 : 2); return; }
+  }
+  if (this.mode === "auto") return;
+};
+H.prompt = function (done) { this.entry = { kind: "addr", buf: "", done: done }; this.show("Adr   "); };
+H.showEA = function () { this.showHex(hex(this.ea, 4), this.read(this.ea), 2); this.emit("ea"); };
+H.autoNext = function () {
+  var self = this; this.showEA(); this.mode = "auto";
+  this.entry = { kind: "data", buf: "", done: function (v) { self.write(self.ea, v); self.ea = (self.ea + 1) & 0xFFFF; self.emit("mem"); self.autoNext(); } };
+};
+
+/* ---------------- running ---------------- */
+H.run = function (addr, robot) {
+  this.cpu.pc = addr; this.cpu.sp = 0x0EDE; this.robot = !!robot; this.mode = "run"; this.block = null; this.keys = []; this.entry = null;
+  this.cpu.push16(ROM.IRQRET - 2);   // a final RTS from the top level lands on "return to executive"
+  this.show("      "); this.log((robot ? "Robot" : "Machine") + " Language run from $" + hex(addr, 4)); this.emit("state");
+};
+H.toExec = function (msg) { this.mode = "exec"; this.block = null; this.robot = false; if (msg) this.log(msg); this.show("rEAdy "); this.emit("state"); };
+H.crash = function (msg) { this.mode = "halt"; this.block = null; this.log(msg); this.showHex("Er", this.cpu.pc, 4); this.emit("state"); };
+H.abort = function () {   // Abort button on the experimental board: halt and show the program counter
+  if (this.mode !== "run") return; this.mode = "halt"; this.armQueue = []; for (var m = 0; m < 8; m++) this.tgt[m] = this.pos[m]; this.speech = null;
+  this.showHex("Pc", this.cpu.pc, 4); this.log("ABORT at $" + hex(this.cpu.pc, 4)); this.emit("state");
+};
+
+H.advance = function (dt) {             // dt seconds of real time
+  dt = Math.min(dt, 0.1);
+  this.motors(dt); this.sensors(dt); this.speechTick(dt);
+  this.time += dt;
+  if (this.mode !== "run") return;
+  var budget = dt * CLOCK + (this.debt || 0), guard = 0;   // slow steps (ROM calls in Robot Language) carry over as debt
+  while (budget > 0 && this.mode === "run" && guard++ < 200000) {
+    if (this.pendingIRQ()) continue;
+    if (this.block) { if (!this.unblocked()) break; this.block = null; }
+    var cy = this.stepOne();
+    budget -= cy; this.cycles += cy;
+  }
+  this.debt = budget < 0 ? budget : 0;
+};
+
+H.stepOne = function () {
+  var c = this.cpu, pc = c.pc;
+  if (pc >= 0xE000) return this.romCall(pc);
+  var op = this.read(pc);
+  if (!this.robot) {
+    if (op === 0x3F) { c.pc = (pc + 1) & 0xFFFF; this.robot = true; return 12; }     // SWI: enter the interpreter
+    return c.step();
+  }
+  if (ROBOT_OPS[op]) return this.robotOp(op, pc) + ROBOT_OVERHEAD;
+  if (op === 0x3F) { c.pc = (pc + 1) & 0xFFFF; return ROBOT_OVERHEAD; }
+  return c.step() + ROBOT_OVERHEAD;     // the interpreter also executes ordinary 6800 instructions, slowly
+};
+
+H.rts = function () { this.cpu.pc = this.cpu.pull16(); return 5; };
+// ROM subroutines run natively in Machine Language; called from Robot Language the
+// interpreter steps through them too, roughly 500x slower (manual: INCH 9 ms vs ~5 s).
+H.romCall = function (pc) {
+  var cy = this.romService(pc);
+  return this.robot && pc !== ROM.IRQRET ? cy * 500 : cy;
+};
+H.romService = function (pc) {
+  var c = this.cpu, i, n, v, a;
+  switch (pc) {
+    case ROM.INCH: if (!this.keys.length) { this.block = { key: true }; return 10; } c.a = this.keys.shift(); return this.rts() + 9000;
+    case ROM.OUTCH: this.outch(c.a); return this.rts() + 60;
+    case ROM.OUTHEX: this.outch(HEXSEG[c.a & 15]); return this.rts() + 80;
+    case ROM.OUTBYT: this.outch(HEXSEG[c.a >> 4]); this.outch(HEXSEG[c.a & 15]); return this.rts() + 160;
+    case ROM.CLRDIS: this.seg = [0,0,0,0,0,0]; this.dig = 0; this.emit("display"); return this.rts() + 120;
+    case ROM.REDIS: this.dig = 0; return this.rts() + 20;
+    case ROM.OUTSTR:                     // string follows the JSR; last character has its decimal point set
+      a = c.pull16(); v = this.read(a++); this.outch(v);
+      if (v & 0x80) c.pc = a; else c.push16(a);        // one character per call, so Robot Language shows them appear
+      return 300;
+    case ROM.DSPLAY: a = c.x; n = c.b; for (i = 0; i < n; i++) { v = this.read(a + i); this.outch(HEXSEG[v >> 4]); this.outch(HEXSEG[v & 15]); } return this.rts() + 200;
+    case ROM.IRQRET: this.robot = this.irqRobot; this.block = this.irqBlock; c.setCC(c.pull()); c.b = c.pull(); c.a = c.pull(); c.x = c.pull16(); c.pc = c.pull16(); return 10;
+    case ROM.IRQRET - 2: this.toExec("Program returned to the executive."); return 5;
+  }
+  this.crash("JSR to ROM $" + hex(pc, 4) + ": that routine is not modeled (the ROM image is not available)."); return 0;
+};
+
+/* ---------------- interrupts: three RAM vectors, dispatched by the ROM ---------------- */
+H.raise = function (bit) { this.irqFlags |= bit; };
+H.pendingIRQ = function () {
+  var c = this.cpu, f = this.irqFlags, vec = 0;
+  if (c.i || !f) return false;
+  if (f & 0x02) vec = 0x27; else if (f & 0x20) vec = 0x2A; else if (f & 0x80) vec = 0x2D; else return false;
+  this.irqFlags &= ~(f & 0xA2);
+  c.waiting = false;
+  c.push16(c.pc); c.push16(c.x); c.push(c.a); c.push(c.b); c.push(c.getCC()); c.i = 1;
+  this.irqRobot = this.robot; this.robot = false;          // the handler runs as machine language
+  this.irqBlock = this.block; this.block = null;           // a pause or speak-wait resumes after the handler
+  c.push16(ROM.IRQRET); c.pc = vec;
+  return true;
+};
+
+/* ---------------- Robot Interpreter ---------------- */
+H.mword = function (w) { return { m: w >> 13, s: (w >> 11) & 3, d: (w >> 10) & 1, p: w & 0x3FF }; };
+H.robotOp = function (op, pc) {
+  var c = this.cpu, len = ROBOT_OPS[op], b1 = this.read(pc + 1), b2 = this.read(pc + 2), w, a, rel, k;
+  c.pc = (pc + len) & 0xFFFF;
+  switch (op) {
+    case 0x02: this.tgt[0] = this.pos[0]; break;
+    case 0x03: this.tgt[7] = this.pos[7]; break;
+    case 0x04: this.armQueue = []; for (k = 1; k <= 6; k++) this.tgt[k] = this.pos[k]; this.armActive = -1; break;
+    case 0x05: this.speech = null; this.emit("speech", ""); break;
+    case 0x1C: case 0x1D: case 0x1E: case 0x1F:
+      if ([this.busy(0), this.busy(7), this.armBusy(), !!this.speech][op - 0x1C]) c.pc = (c.pc + (b1 < 128 ? b1 : b1 - 256)) & 0xFFFF; break;
+    case 0x21: this.armQueue = []; for (k = 1; k <= 6; k++) this.queueArm(k, MID[k], 3); this.setMove(7, MID[7], 3); this.block = { all: true }; break;
+    case 0x3A: this.toExec("3A: return to executive."); return 0;
+    case 0x41: this.sense.light = true; break; case 0x51: this.sense.light = false; break;
+    case 0x42: this.sense.sound = true; break; case 0x52: this.sense.sound = false; break;
+    case 0x45: this.sense.sonar = true; break; case 0x5B: this.sense.sonar = false; break;
+    case 0x4B: this.sense.motion = true; break; case 0x55: this.sense.motion = false; break;
+    case 0x4E: this.sense.display = true; break; case 0x5E: this.sense.display = false; break;
+    case 0x61: case 0x62: this.speak((c.x + b1) & 0xFFFF, op === 0x62); break;
+    case 0x71: case 0x72: this.speak((b1 << 8) | b2, op === 0x72); break;
+    case 0x83: this.robot = false; break;
+    case 0x87: if (this.sleepSwitch) this.block = { until: this.time + ((b1 << 8) | b2) * 10 }; else this.log("87 sleep skipped: the Sleep/Normal switch is at Normal."); break;
+    case 0x8F: this.block = { until: this.time + ((b1 << 8) | b2) / 16 }; break;
+    case 0xC3: case 0xCC: case 0xD3: case 0xDC: case 0xE3: case 0xEC: case 0xF3: case 0xFC:
+      if (op === 0xE3 || op === 0xEC) { a = (c.x + b1) & 0xFFFF; w = (this.read(a) << 8) | this.read(a + 1); }
+      else if (op === 0xF3 || op === 0xFC) { a = (b1 << 8) | b2; w = (this.read(a) << 8) | this.read(a + 1); }
+      else w = (b1 << 8) | b2;
+      rel = (op & 0xF0) === 0xD0;
+      var mw = this.mword(w);
+      this.motorCmd(mw, rel);
+      if ((op & 0x0F) === 3) this.block = { motor: mw.m };
+      break;
+    case 0xFD:
+      for (k = 0; k < 6; k++) this.queueArm(k + 1, this.read(pc + 1 + k), 2);
+      this.setMove(7, this.read(pc + 7), 2); this.block = { all: true }; break;
+  }
+  return 0;
+};
+H.motorCmd = function (k, rel) {
+  var m = k.m;
+  if (m === 0) {                       // drive: position zeroed, D gives direction (manual errata)
+    this.pos[0] = 0; this.tgt[0] = k.d ? -k.p : k.p; this.spd[0] = SPEED.drive[k.s]; return;
+  }
+  var t = rel ? this.posAfterQueue(m) + (k.d ? -k.p : k.p) : k.p;
+  t = Math.max(0, Math.min(MAXP[m], t));
+  if (m === 7) this.setMove(7, t, k.s); else this.queueArm(m, t, k.s);
+};
+H.posAfterQueue = function (m) { var p = this.tgt[m]; this.armQueue.forEach(function (q) { if (q.m === m) p = q.t; }); return p; };
+H.setMove = function (m, t, s) { this.tgt[m] = Math.max(0, Math.min(MAXP[m], t)); this.spd[m] = (m === 0 ? SPEED.drive : SPEED.arm)[s]; };
+H.queueArm = function (m, t, s) { this.armQueue.push({ m: m, t: Math.max(0, Math.min(MAXP[m], t)), s: s }); };
+H.busy = function (m) {
+  if (m >= 1 && m <= 6) { if (this.armActive === m) return true; for (var i = 0; i < this.armQueue.length; i++) if (this.armQueue[i].m === m) return true; }
+  return Math.abs(this.pos[m] - this.tgt[m]) > 1e-6;
+};
+H.armBusy = function () { return this.armActive >= 0 || this.armQueue.length > 0; };
+H.unblocked = function () {
+  var b = this.block;
+  if (b.key) return this.keys.length > 0;
+  if (b.motor !== undefined) return !this.busy(b.motor);
+  if (b.all) return !this.armBusy() && !this.busy(7);
+  if (b.until !== undefined) return this.time >= b.until;
+  if (b.speech) return !this.speech;
+  return true;
+};
+
+/* ---------------- speech: phoneme strings end at FF; BF aaaa jumps (max 8 deep) ---------------- */
+H.speak = function (addr, wait) {
+  var list = [], stack = [], a = addr, guard = 0;
+  while (guard++ < 512) {
+    var v = this.read(a);
+    if (v === 0xFF) { if (!stack.length) break; a = stack.pop(); continue; }
+    if (v === 0xBF) { if (stack.length >= 8) { this.crash("Speech crashed: more than eight BF jumps without an FF."); return; } stack.push(a + 3); a = (this.read(a + 1) << 8) | this.read(a + 2); continue; }
+    list.push(v); a++;
+  }
+  var names = list.map(function (v) { return PH[v & 0x3F] + (v >> 6 ? "'" .repeat(v >> 6) : ""); });
+  var ms = list.reduce(function (s, v) { return s + PDUR[v & 0x3F]; }, 0);
+  this.speech = { until: this.time + ms / 1000, list: list };
+  this.emit("speech", names.join(" "));
+  if (wait) this.block = { speech: true };
+};
+H.speechTick = function () { if (this.speech && this.time >= this.speech.until) { this.speech = null; this.emit("speech", ""); } };
+
+/* ---------------- motors and kinematics ---------------- */
+H.motors = function (dt) {
+  if (this.armActive >= 0 && !(Math.abs(this.pos[this.armActive] - this.tgt[this.armActive]) > 1e-6)) this.armActive = -1;
+  if (this.armActive < 0 && this.armQueue.length) { var q = this.armQueue.shift(); this.armActive = q.m; this.tgt[q.m] = q.t; this.spd[q.m] = SPEED.arm[q.s]; }
+  for (var m = 0; m < 8; m++) {
+    var d = this.tgt[m] - this.pos[m]; if (!d) continue;
+    var st = Math.sign(d) * Math.min(Math.abs(d), this.spd[m] * dt);
+    if (m === 0) this.drive(st);
+    this.pos[m] += st;
+    if (Math.abs(this.tgt[m] - this.pos[m]) < 1e-6) this.pos[m] = this.tgt[m];
+  }
+  for (m = 1; m < 8; m++) this.ram[m - 1] = Math.round(this.pos[m]);
+};
+H.steerAngle = function () { return (this.pos[7] - 0x49) / 0x49 * 1.3; };      // radians, + = right
+H.headAngle = function () { return (this.pos[6] - 0x61) / 0x61 * (175 * Math.PI / 180); };
+H.drive = function (units) {
+  var W = this.world, ds = units * DRIVE_IN * (40 / 12);  // world: 40 px per foot
+  var phi = this.steerAngle(), L = 30;
+  var nx = W.x + ds * Math.cos(phi) * Math.sin(W.th), ny = W.y - ds * Math.cos(phi) * Math.cos(W.th);
+  if (this.hitsWall(nx, ny, 28)) { this.tgt[0] = this.pos[0]; this.log("Bump: the robot ran into something and the drive stopped."); return; }
+  W.th += ds * Math.sin(phi) / L; W.x = nx; W.y = ny;
+  var t = W.trail, last = t[t.length - 1];
+  if (!last || Math.hypot(last[0] - W.x, last[1] - W.y) > 3) { t.push([W.x, W.y]); if (t.length > 800) t.shift(); }
+};
+H.hitsWall = function (x, y, r) {
+  return this.world.walls.some(function (w) {
+    var dx = w[2] - w[0], dy = w[3] - w[1], l2 = dx * dx + dy * dy, t = Math.max(0, Math.min(1, ((x - w[0]) * dx + (y - w[1]) * dy) / l2));
+    return Math.hypot(x - (w[0] + t * dx), y - (w[1] + t * dy)) < r;
+  });
+};
+H.sonarDistance = function () {                     // inches from the head along its facing, or Infinity
+  var W = this.world, ang = W.th + this.headAngle(), ox = W.x, oy = W.y, dx = Math.sin(ang), dy = -Math.cos(ang), best = Infinity;
+  W.walls.forEach(function (w) {
+    var ex = w[2] - w[0], ey = w[3] - w[1], den = dx * ey - dy * ex; if (Math.abs(den) < 1e-9) return;
+    var t = ((w[0] - ox) * ey - (w[1] - oy) * ex) / den, u = ((w[0] - ox) * dy - (w[1] - oy) * dx) / den;
+    if (t > 0 && u >= 0 && u <= 1 && t < best) best = t;
+  });
+  return best / 40 * 12;
+};
+H.sensors = function () {
+  if (this.sense.sonar && this.time - this.lastSonar >= 0.05) {
+    this.lastSonar = this.time;
+    var d = this.sonarDistance();
+    if (d >= 4 && d <= 96) { this.ram[0x11] = Math.min(255, Math.round(d / 0.4)); this.ram[0x10] = (this.ram[0x10] + 1) & 0xFF; }
+  }
+  if (this.levels.soundUntil && this.time > this.levels.soundUntil) { this.levels.sound = 0x10; this.levels.soundUntil = 0; }
+};
+H.clap = function () { this.levels.sound = 0xC0; this.levels.soundUntil = this.time + 0.25; };
+H.trigger = function () { this.raise(0x20); };
+H.motion = function () { if (this.sense.motion) this.raise(0x02); };
+
+/* ---------------- disassembler (6800 + Robot Language) ---------------- */
+var MN = {};
+(function () {
+  var inh = {0x01:"NOP",0x06:"TAP",0x07:"TPA",0x08:"INX",0x09:"DEX",0x0A:"CLV",0x0B:"SEV",0x0C:"CLC",0x0D:"SEC",0x0E:"CLI",0x0F:"SEI",0x10:"SBA",0x11:"CBA",0x16:"TAB",0x17:"TBA",0x19:"DAA",0x1B:"ABA",
+    0x30:"TSX",0x31:"INS",0x32:"PULA",0x33:"PULB",0x34:"DES",0x35:"TXS",0x36:"PSHA",0x37:"PSHB",0x39:"RTS",0x3B:"RTI",0x3E:"WAI",0x3F:"SWI"};
+  for (var k in inh) MN[k] = [inh[k], 1, ""];
+  var br = ["BRA",null,"BHI","BLS","BCC","BCS","BNE","BEQ","BVC","BVS","BPL","BMI","BGE","BLT","BGT","BLE"];
+  br.forEach(function (n, i) { if (n) MN[0x20 + i] = [n, 2, "rel"]; });
+  var rmw = {0:"NEG",3:"COM",4:"LSR",6:"ROR",7:"ASR",8:"ASL",9:"ROL",0xA:"DEC",0xC:"INC",0xD:"TST",0xF:"CLR"};
+  for (k in rmw) { MN[0x40 + +k] = [rmw[k] + "A", 1, ""]; MN[0x50 + +k] = [rmw[k] + "B", 1, ""]; MN[0x60 + +k] = [rmw[k], 2, "idx"]; MN[0x70 + +k] = [rmw[k], 3, "ext"]; }
+  MN[0x6E] = ["JMP", 2, "idx"]; MN[0x7E] = ["JMP", 3, "ext"];
+  var alu = {0:"SUB",1:"CMP",2:"SBC",4:"AND",5:"BIT",6:"LDA",7:"STA",8:"EOR",9:"ADC",0xA:"ORA",0xB:"ADD"};
+  var modes = [["imm",2],["dir",2],["idx",2],["ext",3]];
+  for (var hi = 0; hi < 8; hi++) {
+    var acc = hi < 4 ? "A" : "B", md = modes[hi & 3];
+    for (k in alu) { if (+k === 7 && (hi & 3) === 0) continue; MN[0x80 + hi * 16 + +k] = [alu[k] + acc, md[1], md[0]]; }
+  }
+  [[0x8C,"CPX"],[0x8E,"LDS"],[0x8F,"STS"],[0xCE,"LDX"],[0xCF,"STX"]].forEach(function (p) {
+    for (var j = 0; j < 4; j++) { var o = p[0] + j * 16; if ((p[1] === "STS" || p[1] === "STX") && j === 0) continue; MN[o] = [p[1], j === 0 ? 3 : j === 3 ? 3 : 2, ["imm16","dir","idx","ext"][j]]; }
+  });
+  MN[0x8D] = ["BSR", 2, "rel"]; MN[0xAD] = ["JSR", 2, "idx"]; MN[0xBD] = ["JSR", 3, "ext"];
+})();
+var RNAME = {0x02:"ABORT drive",0x03:"ABORT steering",0x04:"ABORT arm",0x05:"ABORT speech",0x21:"ZERO",0x3A:"RETURN to executive",0x41:"ENABLE light",0x42:"ENABLE sound",0x45:"ENABLE sonar",0x4B:"ENABLE motion",0x4E:"ENABLE display",0x51:"DISABLE light",0x52:"DISABLE sound",0x55:"DISABLE motion",0x5B:"DISABLE sonar",0x5E:"DISABLE display",0x83:"MACHINE LANGUAGE"};
+var ROMNAME = {}; for (var rk in ROM) ROMNAME[ROM[rk]] = rk;
+H.disasm = function (a, robot) {
+  var op = this.read(a), b1 = this.read(a + 1), b2 = this.read(a + 2), w16 = (b1 << 8) | b2;
+  var rel = function (o) { return hex((a + 2 + (o < 128 ? o : o - 256)) & 0xFFFF, 4); };
+  if (robot && ROBOT_OPS[op]) {
+    var len = ROBOT_OPS[op], t;
+    if (RNAME[op]) t = RNAME[op];
+    else if (op >= 0x1C && op <= 0x1F) t = "BRANCH if " + ["drive", "steering", "arm", "speech"][op - 0x1C] + " busy $" + rel(b1);
+    else if (op === 0x61 || op === 0x62) t = "SPEAK " + hex(b1, 2) + ",X" + (op === 0x62 ? " wait" : "");
+    else if (op === 0x71 || op === 0x72) t = "SPEAK $" + hex(w16, 4) + (op === 0x72 ? " wait" : "");
+    else if (op === 0x87) t = "SLEEP " + (w16 * 10) + " s";
+    else if (op === 0x8F) t = "PAUSE " + (w16 / 16) + " s";
+    else if (op === 0xFD) { t = "MOVE ALL"; for (var i = 1; i < 8; i++) t += " " + hex(this.read(a + i), 2); }
+    else if (op === 0xE3 || op === 0xEC) t = "MOVE abs " + hex(b1, 2) + ",X" + (op === 0xE3 ? " wait" : "");
+    else if (op === 0xF3 || op === 0xFC) t = "MOVE abs ($" + hex(w16, 4) + ")" + (op === 0xF3 ? " wait" : "");
+    else { var k = this.mword(w16), r = (op & 0xF0) === 0xD0; t = "MOVE " + MOT[k.m] + (r ? " rel " + (k.d ? "-" : "+") : (k.m === 0 ? (k.d ? " rev " : " fwd ") : " to ")) + "$" + hex(k.p, 3) + " " + ["slow", "slow", "med", "fast"][k.s] + ((op & 0x0F) === 3 ? ", wait" : ""); }
+    return { len: len, text: t, robot: true };
+  }
+  var m = MN[op];
+  if (!m) return { len: 1, text: "FCB $" + hex(op, 2), bad: true };
+  var arg = "";
+  switch (m[2]) {
+    case "imm": arg = "#$" + hex(b1, 2); break;
+    case "imm16": arg = "#$" + hex(w16, 4); break;
+    case "dir": arg = "$" + hex(b1, 2); break;
+    case "idx": arg = "$" + hex(b1, 2) + ",X"; break;
+    case "ext": arg = "$" + hex(w16, 4) + (ROMNAME[w16] ? "  " + ROMNAME[w16] : ""); break;
+    case "rel": arg = "$" + rel(b1); break;
+  }
+  var text = m[0] + (arg ? " " + arg : "");
+  if (op === 0x3F && !robot) text = "SWI  → Robot Language";
+  return { len: m[1], text: text };
+};
+
+root.Hero = Hero;
+if (typeof module !== "undefined") module.exports = Hero;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+/* Example programs. "manual" ones are transcribed from the ET-18 Technical Manual (1982). */
+(function (root) {
+var PROGRAMS = [
+  { id: "greet", name: "Hello, I am HERO", src: "Written for this page", org: 0x0100, robot: true,
+    note: "Speaks, turns its head, drives a curve, then works the arm: a tour of the Robot Interpreter.",
+    bytes: { 0x0100: [0x72,0x01,0x40, 0xCC,0xD8,0x20, 0xD3,0x10,0xC0, 0xC3,0xD8,0xA0, 0xC3,0xF8,0x10, 0xD3,0x10,0x90, 0xC3,0xF8,0x49,
+                      0xFD,0x80,0x40,0x49,0x70,0x75,0x61,0x49, 0xFD,0x80,0x40,0x49,0x70,0x10,0x61,0x49, 0x3A],
+             0x0140: [0x1B,0x3B,0x18,0x35,0x37,0x3E, 0x15,0x29,0x2F,0x0C,0x3E, 0x1B,0x3C,0x2B,0x26,0x37,0xFF] },
+    data: [[0x0140, 17, "phon"]] },
+  { id: "hello", name: "HELLO! on the display", src: "Technical Manual p. 23 (OUTSTR)", org: 0x0335, robot: false,
+    note: "CLRDIS, then OUTSTR with the string inline. Run it again in Robot Language (key A instead of 1) to watch each letter appear.",
+    bytes: { 0x0335: [0xBD,0xF6,0x5B, 0xBD,0xF7,0xE5, 0x37,0x4F,0x0E,0x0E,0x7E,0xA0, 0x20,0xFE] },
+    data: [[0x033B, 6, "str"]] },
+  { id: "keyhead", name: "Point the head with keys 1, 2, 3", src: "Technical Manual p. 21 (INCH)", org: 0x0300, robot: false,
+    note: "Machine Language reads the keypad with INCH, then drops into Robot Language (3F) just long enough to move the head, and returns with 83.",
+    bytes: { 0x0300: [0xBD,0xF7,0x77, 0x81,0x03, 0x27,0x0A, 0x81,0x01, 0x27,0x0D, 0x81,0x02, 0x27,0x10, 0x20,0xEF,
+                      0x3F, 0xC3,0xD4,0x50, 0x83, 0x20,0xE8,
+                      0x3F, 0xC3,0xD4,0x75, 0x83, 0x20,0xE1,
+                      0x3F, 0xC3,0xD4,0x62, 0x83, 0x20,0xDA] } },
+  { id: "sonar", name: "Sonar head scan", src: "Technical Manual p. 29 (branch if busy)", org: 0x0450, robot: true,
+    note: "Turns the head while the sonar runs, showing range (left) and hit count (right) until the head stops. The box and the wall give it echoes.",
+    bytes: { 0x0450: [0x86,0x00, 0x97,0x10, 0x97,0x11, 0xCC,0xD0,0xBE, 0x8D,0x07, 0xCC,0xD0,0x02, 0x8D,0x02, 0x20,0xFE,
+                      0x45, 0x01, 0x96,0x11, 0xBD,0xF6,0x4E, 0xBD,0xF7,0xAD, 0x4F, 0xBD,0xF7,0xC8, 0xBD,0xF7,0xC8,
+                      0x96,0x10, 0xBD,0xF7,0xAD, 0x01, 0x1E,0xE8, 0x39] } },
+  { id: "clap", name: "Clap to start, clap to stop", src: "Technical Manual p. 28 (abort)", org: 0x0480, robot: true,
+    note: "Listens on the sense port ($C240). Press Clap: it drives forward; clap again to abort the drive. The threshold 30 is at $0499.",
+    bytes: { 0x0480: [0x42, 0x8F,0x00,0x20, 0x8D,0x0E, 0xCC,0x08,0xFF, 0x8F,0x00,0x10, 0x8D,0x06, 0x02, 0x8F,0x00,0x10, 0x20,0xF0,
+                      0xB6,0xC2,0x40, 0x0C, 0x81,0x30, 0x25,0xF8, 0x39] } },
+  { id: "trigger", name: "Count pendant trigger pulls", src: "Written for this page (interrupt vector, p. 34)", org: 0x0200, robot: false,
+    note: "Plants JMP $0230 in the trigger vector at $002A, enables interrupts, then sweeps the head in Robot Language. Each Trigger press runs the Machine Language handler.",
+    bytes: { 0x0200: [0x86,0x7E, 0x97,0x2A, 0xCE,0x02,0x30, 0xDF,0x2B, 0x0E, 0x3F, 0xC3,0xD0,0x30, 0xC3,0xD0,0x90, 0x20,0xF8],
+             0x0230: [0x7C,0x00,0x40, 0xBD,0xF6,0x4E, 0x96,0x40, 0xBD,0xF7,0xAD, 0x39] } }
+];
+root.HERO_PROGRAMS = PROGRAMS;
+if (typeof module !== "undefined") module.exports = PROGRAMS;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+/* HERO 1 hardware emulation: runs the real 8 KB system ROM on the 6808 core.
+ * Device behavior is reconstructed from the ET-18 Technical Manual, the
+ * schematics, the owners' FAQ port map, and the ROM's own use of each port. */
+(function (root) {
+"use strict";
+var M6800 = root.M6800 || (typeof require !== "undefined" ? require("./cpu6800.js") : null);
+
+var CLOCK = 3579545 / 4;               // E clock: 3.579545 MHz crystal / 4
+var TICK_HZ = 1024;                     // real-time clock interrupt (manual: $0EFC counts at 1,024 Hz)
+// keypad wiring, recovered from the ROM's scan routine at $F73C: key -> [port, bit]
+var KEYMAP = { 0xF:[3,0], 0xC:[3,1], 9:[3,2], 6:[3,3], 3:[3,4], 0xE:[5,0], 0xB:[5,1], 8:[5,2], 5:[5,3], 2:[5,4],
+               0xD:[6,0], 0xA:[6,1], 7:[6,2], 4:[6,3], 1:[6,4], 0:[6,5] };
+var MOT = ["Drive", "Extend", "Shoulder", "Wrist rotate", "Wrist pivot", "Gripper", "Head", "Steering"];
+var PH = ["EH3","EH2","EH1","PA0","DT","A1","A2","ZH","AH2","I3","I2","I1","M","N","B","V","CH","SH","Z","AW1","NG","AH1","OO1","OO","L","K","J","H","G","F","D","S","A","AY","Y1","UH3","AH","P","O","I","U","Y","T","R","E","W","AE","AE1","AW2","UH2","UH1","UH","O2","O1","IU","U1","THV","TH","ER","EH","E1","AW","PA1","STOP"];
+var PDUR = [59,71,121,47,47,71,103,90,71,55,80,121,103,80,71,71,71,121,71,146,121,146,103,185,103,80,47,71,71,103,55,90,185,65,80,47,250,103,185,103,185,103,71,90,185,80,185,103,90,71,103,185,80,121,59,90,80,71,146,185,121,250,185,47];
+
+function hex(v, n) { return (v >>> 0).toString(16).toUpperCase().padStart(n, "0"); }
+
+function HeroHW(rom) {
+  var self = this;
+  this.rom = rom;                       // Uint8Array(8192) for $E000-$FFFF
+  this.ram = new Uint8Array(0x1000);
+  this.cpu = new M6800({ read: function (a) { return self.read(a); }, write: function (a, v) { self.write(a, v); } });
+  this.cpu.onIllegal = function (op, pc) { self.halted = "Illegal opcode $" + hex(op, 2) + " at $" + hex(pc, 4); return 2; };
+  this.listeners = [];
+  // motors: physical step counts. stepper groups share phase lines; C2C0 bits 6/7 pick which motor of each pair is driven
+  // physical positions in the ROM's units; travel limits from the manual's "Data in Memory" table
+  this.limits = [null, [0, 0x98], [0, 0x86], [0, 0x93], [0, 0xA5], [0, 0x75], [0, 0xC2], [0, 0x93]];
+  this.steps = [0, 0x4C, 0x43, 0x49, 0x52, 0x3A, 0x61, 0x49];   // power up somewhere mid-travel; Initialize (3,1) homes them
+  this.lastAng = {};
+  this.world = { x: 160, y: 300, th: 0, trail: [], walls: [[0,0,640,0],[640,0,640,380],[640,380,0,380],[0,380,0,0],[430,110,520,110],[520,110,520,180],[520,180,430,180],[430,180,430,110],[90,60,170,60],[170,60,170,95],[170,95,90,95],[90,95,90,60]] };
+  this.powerOn();
+}
+var H = HeroHW.prototype;
+HeroHW.hex = hex; HeroHW.MOT = MOT; HeroHW.PH = PH; HeroHW.CLOCK = CLOCK;
+
+H.emit = function (t, m) { this.listeners.forEach(function (f) { f(t, m); }); };
+
+H.powerOn = function () {
+  this.ram.fill(0);
+  // RAM is battery-backed through sleep, so start as a robot that was initialized earlier:
+  // the ROM's position table ($0000-$0006) agrees with where the motors physically are.
+  for (var m = 1; m < 8; m++) this.ram[m - 1] = Math.round(this.steps[m]);
+  this.out = { 0xC260: 0, 0xC280: 0, 0xC2A0: 0x3F, 0xC2C0: 0, 0xC2E0: 0, 0xC300: 0, 0xC240: 0, 0xC220: 0 };
+  this.flags = 0; this.mask = 0;
+  this.keysDown = {};
+  this.latch = [0, 0, 0, 0, 0, 0];      // display segment latches, one byte per digit
+  this.sleepSwitch = false; this.triggerHeld = false;
+  this.time = 0; this.cycles = 0; this.tickAcc = 0; this.debt = 0;
+  this.speechBusyUntil = 0; this.speechText = []; this.speechClearAt = 0;
+  this.sonarAt = 0; this.sonarRange = 0;
+  this.wheelAcc = 0; this.driveSpeed = 0;
+  this.light = 0x60; this.sound = 0x10; this.soundUntil = 0;
+  this.halted = null;
+  this.reset();
+};
+H.reset = function () { this.halted = null; this.cpu.waiting = false; this.cpu.reset(); this.emit("reset"); };
+H.nmi = function () { this.cpu.nmi(); };   // ABORT button
+
+/* ---------------- bus ---------------- */
+H.read = function (a) {
+  if (a < 0x1000) return this.ram[a];
+  if (a >= 0xE000) return this.rom[a - 0xE000];
+  if (a >= 0xC000 && a < 0xC400) return this.ioRead(a);
+  return 0xFF;
+};
+H.write = function (a, v) {
+  if (a < 0x1000) { this.ram[a] = v; return; }
+  if (a >= 0xC000 && a < 0xC400) this.ioWrite(a, v);
+};
+
+H.ioRead = function (a) {
+  if (a >= 0xC000 && a <= 0xC007) {                       // keypad rows on A0-A2 (active low)
+    var v = 0xFF, row = a & 7;
+    for (var k in this.keysDown) { var m = KEYMAP[k]; if (m && m[0] === row) v &= ~(1 << m[1]); }
+    return v;
+  }
+  switch (a) {
+    case 0xC200: return this.flags;
+    case 0xC220: return this.sonarRange;
+    case 0xC240: return this.senseLevel();
+    case 0xC260: return this.limitInputs();
+    case 0xC280: return (this.sleepSwitch ? 0 : 0x02) | (this.triggerHeld ? 0 : 0x01) | 0xF0 | 0x0C;
+    case 0xC300: return 0xF0 | this.clockRead();
+    case 0xC2A0: return 0xFF;
+  }
+  return 0xFF;
+};
+H.ioWrite = function (a, v) {
+  if (a >= 0xC100 && a < 0xC170) {                        // display: one 74LS259 per digit, data bit 0
+    var d = 6 - ((a >> 4) & 0xF), q = a & 7;
+    if (d >= 0 && d < 6) { if (v & 1) this.latch[d] |= (1 << q); else this.latch[d] &= ~(1 << q); }
+    return;
+  }
+  if (a === 0xC200) { this.flags &= v; this.mask = v; return; }
+  var old = this.out[a];
+  this.out[a] = v;
+  if (a === 0xC260 || a === 0xC280 || a === 0xC2C0) this.steppers();
+  if (a === 0xC2C0 && (v & 0x20) && !(old & 0x20)) this.speechStrobe();
+  if (a === 0xC2A0) this.emit("drive", v);
+};
+
+/* ---------------- interrupts ---------------- */
+H.raise = function (bit) { if (this.mask & bit) this.flags |= bit; };
+H.irqLine = function () { return (this.flags & this.mask) !== 0; };
+
+/* ---------------- steppers ---------------- */
+// phase nibble -> electrical angle; a change of +-45/90 degrees is one (half) step
+// two bipolar coils: A on bits 3/2, B on bits 1/0 (ROM sequence 0110,0101,1001,1010)
+function phaseAngle(n) {
+  var x = ((n & 4) ? 1 : 0) - ((n & 8) ? 1 : 0), y = ((n & 1) ? 1 : 0) - ((n & 2) ? 1 : 0);
+  if (!x || !y) return null; return Math.atan2(y, x);
+}
+var DRIVE_COUNTS_PER_SPEED = 0.6, DRIVE_IN_PER_COUNT = 0.25;
+var STEPS_PER_UNIT = [0, 32, 32, 8, 8, 4, 32, 8];   // phase steps per ROM position unit, measured from the ROM's own counting
+H.steppers = function () {
+  var c260 = this.out[0xC260], c280 = this.out[0xC280], sel = this.out[0xC2C0];
+  var groups = [
+    [7, c260 >> 4],                                                          // steering
+    [(sel & 0x40) ? 4 : -1, c260 & 15], [(sel & 0x80) ? 3 : -1, c260 & 15],  // pivot / wrist rotate
+    [(sel & 0x40) ? 1 : -1, c280 >> 4], [(sel & 0x80) ? 6 : -1, c280 >> 4],  // extend / head
+    [(sel & 0x40) ? 5 : -1, c280 & 15], [(sel & 0x80) ? 2 : -1, c280 & 15]   // gripper / shoulder
+  ];
+  for (var i = 0; i < groups.length; i++) {
+    var m = groups[i][0], ang = phaseAngle(groups[i][1]);
+    if (m < 0 || ang === null) continue;
+    var last = this.lastAng[m];
+    if (last !== undefined) {
+      var d = ang - last; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+      var st = Math.round(d / (Math.PI / 2));
+      if (st) this.stepMotor(m, st);
+    }
+    this.lastAng[m] = ang;
+  }
+};
+H.stepMotor = function (m, st) {
+  var L = this.limits[m], p = this.steps[m] + st / STEPS_PER_UNIT[m];
+  if (L) p = Math.max(L[0], Math.min(L[1], p));        // mechanical stops: the motor stalls
+  this.steps[m] = p;
+  this.lastMoved = m;
+};
+// limit switch inputs on $C260 (active low), bit 0 = speech request (high when the SC-01 wants a phoneme)
+H.limitInputs = function () {
+  var v = 0xFF, s = this.steps, L = this.limits;
+  if (s[7] >= L[7][1] - 0.01) v &= ~0x40; if (s[7] <= L[7][0] + 0.01) v &= ~0x08;     // steering CW / CCW
+  if (s[6] <= L[6][0] + 0.01) v &= ~0x10; if (s[6] >= L[6][1] - 0.01) v &= ~0x02;     // head CCW / CW
+  var am = this.lastMoved >= 1 && this.lastMoved <= 5 ? this.lastMoved : -1;
+  if (am > 0) { if (s[am] >= L[am][1] - 0.01) v &= ~0x20; if (s[am] <= L[am][0] + 0.01) v &= ~0x04; }
+  if (this.time < this.speechBusyUntil) v &= ~0x01;
+  return v;
+};
+
+/* ---------------- speech (SC-01) ---------------- */
+H.speechStrobe = function () {
+  var p = this.out[0xC240] & 0x3F;
+  this.speechBusyUntil = this.time + PDUR[p] / 1000;
+  this.speechClearAt = this.speechBusyUntil + 0.8;
+  if (p !== 0x3F) { this.speechText.push(PH[p]); this.emit("speech", this.speechText.join(" ")); }
+};
+
+/* ---------------- sense board, sonar, clock ---------------- */
+H.senseLevel = function () {
+  var light = (this.out[0xC2C0] & 0x10) !== 0;
+  return light ? this.light : this.sound;
+};
+H.clap = function () { this.sound = 0xC0; this.soundUntil = this.time + 0.25; };
+H.clockRead = function () {
+  var r = this.out[0xC2C0] & 15, d = new Date(), h = d.getHours();
+  var vals = [d.getSeconds() % 10, Math.floor(d.getSeconds() / 10), d.getMinutes() % 10, Math.floor(d.getMinutes() / 10),
+    h % 10, Math.floor(h / 10) | 8, d.getDay(), d.getDate() % 10, Math.floor(d.getDate() / 10),
+    (d.getMonth() + 1) % 10, Math.floor((d.getMonth() + 1) / 10), d.getFullYear() % 10, Math.floor(d.getFullYear() / 10) % 10, 0, 0, 0];
+  return vals[r] & 15;
+};
+H.headAngle = function () { var L = this.limits[6]; return ((this.steps[6] - (L[0] + L[1]) / 2) / (L[1] - L[0])) * (350 * Math.PI / 180); };
+H.steerAngle = function () { var L = this.limits[7]; return ((this.steps[7] - (L[0] + L[1]) / 2) / ((L[1] - L[0]) / 2)) * 1.3; };
+H.sonarDistance = function () {
+  var W = this.world, ang = W.th + this.headAngle(), ox = W.x, oy = W.y, dx = Math.sin(ang), dy = -Math.cos(ang), best = Infinity;
+  W.walls.forEach(function (w) {
+    var ex = w[2] - w[0], ey = w[3] - w[1], den = dx * ey - dy * ex; if (Math.abs(den) < 1e-9) return;
+    var t = ((w[0] - ox) * ey - (w[1] - oy) * ex) / den, u = ((w[0] - ox) * dy - (w[1] - oy) * dx) / den;
+    if (t > 0 && u >= 0 && u <= 1 && t < best) best = t;
+  });
+  return best / 40 * 12;
+};
+
+/* ---------------- drive ---------------- */
+H.driveTick = function (dt) {
+  // $C2A0: bit 7 direction (0 = forward), bit 6 motor on, bits 5-0 PWM speed; the ROM ramps speed one step every 32 ms
+  var v = this.out[0xC2A0], spd = (v & 0x40) ? (v & 0x3F) : 0;
+  var dir = (v & 0x80) ? -1 : 1;
+  this.driveSpeed = spd;
+  if (!spd) return;
+  var counts = spd * DRIVE_COUNTS_PER_SPEED * dt;               // encoder counts per second (illustrative scale)
+  this.wheelAcc += counts;
+  while (this.wheelAcc >= 1) {
+    this.wheelAcc -= 1; this.raise(0x40);
+    var W = this.world, ds = dir * DRIVE_IN_PER_COUNT * (40 / 12), phi = this.steerAngle();
+    var nx = W.x + ds * Math.cos(phi) * Math.sin(W.th), ny = W.y - ds * Math.cos(phi) * Math.cos(W.th);
+    if (this.hitsWall(nx, ny, 28)) { this.wheelAcc = 0; break; }      // stalled against something
+    W.th += ds * Math.sin(phi) / 30; W.x = nx; W.y = ny;
+    var t = W.trail, last = t[t.length - 1];
+    if (!last || Math.hypot(last[0] - W.x, last[1] - W.y) > 3) { t.push([W.x, W.y]); if (t.length > 800) t.shift(); }
+  }
+};
+H.hitsWall = function (x, y, r) {
+  return this.world.walls.some(function (w) {
+    var dx = w[2] - w[0], dy = w[3] - w[1], l2 = dx * dx + dy * dy, t = Math.max(0, Math.min(1, ((x - w[0]) * dx + (y - w[1]) * dy) / l2));
+    return Math.hypot(x - (w[0] + t * dx), y - (w[1] + t * dy)) < r;
+  });
+};
+
+/* ---------------- keypad and buttons ---------------- */
+H.press = function (k) {                    // key held ~80 ms of machine time
+  if (k === "RESET") { this.reset(); return; }
+  this.keysDown[k] = this.time + 0.08;
+};
+H.trigger = function () { this.raise(0x20); };
+H.motion = function () { if (this.out[0xC2E0] & 0x04) { this.raise(0x02); return true; } return false; };
+H.sonarOn = function () { return (this.out[0xC2E0] & 0x02) !== 0; };
+H.displayOn = function () { return (this.out[0xC2E0] & 0x10) !== 0; };
+
+/* ---------------- main loop ---------------- */
+H.advance = function (dt) {
+  dt = Math.min(dt, 0.1);
+  var c = this.cpu, budget = dt * CLOCK + this.debt, perTick = CLOCK / TICK_HZ;
+  while (budget > 0) {
+    if (this.halted) break;
+    // devices advance in 1/1024 s slices
+    if (this.tickAcc <= 0) {
+      this.tickAcc += perTick;
+      this.time += 1 / TICK_HZ;
+      this.raise(0x10);
+      for (var k in this.keysDown) if (this.time > this.keysDown[k]) delete this.keysDown[k];
+      if (this.soundUntil && this.time > this.soundUntil) { this.sound = 0x10; this.soundUntil = 0; }
+      if (this.speechClearAt && this.time > this.speechClearAt) { this.speechText = []; this.speechClearAt = 0; this.emit("speech", ""); }
+      if ((this.out[0xC2E0] & 0x02) && this.time - this.sonarAt > 0.06) {           // sonar powered: ping
+        this.sonarAt = this.time; var d = this.sonarDistance();
+        if (d >= 4 && d <= 96) { this.sonarRange = Math.min(255, Math.round(d / 0.4)); this.raise(0x01); }
+      }
+      this.driveTick(1 / TICK_HZ);
+    }
+    if (this.irqLine() && !c.i) c.irq();
+    var cy = c.step();
+    if (c.waiting && !this.irqLine()) cy = Math.max(cy, Math.ceil(this.tickAcc));
+    budget -= cy; this.tickAcc -= cy; this.cycles += cy;
+  }
+  this.debt = Math.min(0, budget);
+};
+
+root.HeroHW = HeroHW;
+if (typeof module !== "undefined") module.exports = HeroHW;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id), hex=Hero.hex;
+const P=window.HERO_PROGRAMS;
+const ROM_SHA1="4c5f5a0695874db2a4e70a9dcefec208ca0e661d";
+let current=P[0];
+
+/* ---- engine: Heath's ROM on emulated hardware when a ROM is loaded, the JavaScript stand-in otherwise ---- */
+let E=null, kind="hle";
+const listeners=(t,m)=>{if(t==="log")log(m);else if(t==="speech")$("speech").textContent=m?"🗣 "+m:"";else if(t==="mem")buildListing();};
+function startHLE(){kind="hle";E=new Hero();E.listeners.push(listeners);romStatus();}
+function startROM(bytes,note){kind="rom";E=new HeroHW(bytes);E.listeners.push(listeners);romStatus(note);log("Power on with Heath ROM. Wait for HEro 1.0 and “ready”.");}
+function romStatus(note){
+  const el=$("rom-status");
+  el.textContent=kind==="rom"?"Running Heath's system ROM"+(note?" ("+note+")":"")+" on emulated hardware.":"No ROM loaded: running the JavaScript stand-in for the ROM.";
+  $("rom-pill").textContent=kind==="rom"?"HEATH ROM 1.0":"ROM STAND-IN";$("rom-pill").className="pill "+(kind==="rom"?"machine":"");
+  $("b-forget").hidden=kind!=="rom";
+}
+async function sha1(buf){try{const d=await crypto.subtle.digest("SHA-1",buf);return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,"0")).join("");}catch(e){return "";}}
+async function useRomBytes(buf,save){
+  const bytes=new Uint8Array(buf);
+  if(bytes.length!==8192){log("That file is "+bytes.length+" bytes; the HERO 1 system ROM is 8,192 bytes ($E000-$FFFF).");return;}
+  const h=await sha1(bytes);const known=h===ROM_SHA1;
+  if(save){try{let s="";bytes.forEach(b=>s+=String.fromCharCode(b));localStorage.setItem("hero1rom",btoa(s));}catch(e){}}
+  startROM(bytes,known?"version 1.0, checksum verified":"unrecognized 8 KB image");buildListing();
+}
+$("rom-file").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>useRomBytes(r.result,true);r.readAsArrayBuffer(f);});
+$("b-forget").onclick=()=>{try{localStorage.removeItem("hero1rom");}catch(e){}startHLE();log("ROM forgotten; back to the stand-in.");buildListing();};
+
+/* ---- display ---- */
+(function(){
+  const S={a:"6,2 34,2 30,7 10,7",b:"35,4 35,28 31,25 31,8",c:"35,32 35,56 31,52 31,35",d:"6,58 34,58 30,53 10,53",e:"5,32 9,35 9,52 5,56",f:"5,4 9,8 9,25 5,28",g:"7,30 11,27 29,27 33,30 29,33 11,33"};
+  let s="";for(let i=0;i<6;i++){s+='<g transform="translate('+(8+i*48)+',2) skewX(-6)">';for(const k in S)s+='<polygon class="s" data-d="'+i+'" data-k="'+k+'" points="'+S[k]+'"/>';s+='<circle class="s" data-d="'+i+'" data-k="p" cx="41" cy="57" r="3"/></g>';}
+  $("seg").innerHTML=s;
+})();
+const BIT={a:0x40,b:0x20,c:0x10,d:0x08,e:0x04,f:0x02,g:0x01,p:0x80};
+const segEls=[...document.querySelectorAll("#seg .s")];
+function segs(){return kind==="rom"?E.latch:E.seg;}
+function dispOn(){return kind==="rom"?E.displayOn():!(E.mode==="run"&&!E.sense.display);}
+function drawSeg(){const on=dispOn(),v=segs();segEls.forEach(p=>{p.classList.toggle("on",on&&!!((v[+p.dataset.d]||0)&BIT[p.dataset.k]));});}
+
+/* ---- keypad (layout from the block diagram) ---- */
+const LAYOUT=["D","E","F","A","B","C","7","8","9","4","5","6","1","2","3","0","RESET"];
+const keyEls={};
+LAYOUT.forEach(k=>{const b=document.createElement("button");b.type="button";b.textContent=k;if(k==="RESET"){b.className="reset";b.style.gridColumn="span 2";}
+  b.addEventListener("click",()=>press(k));$("keys").appendChild(b);keyEls[k]=b;});
+function press(k){const el=keyEls[k];if(el){el.classList.add("hit");setTimeout(()=>el.classList.remove("hit"),140);}if(kind==="rom")E.press(k==="RESET"?"RESET":parseInt(k,16));else E.key(k==="RESET"?"RESET":parseInt(k,16));}
+document.addEventListener("keydown",e=>{if(e.target.closest("select,input"))return;const k=e.key.toUpperCase();if(/^[0-9A-F]$/.test(k)){press(k);e.preventDefault();}else if(k==="ESCAPE"){press("RESET");}});
+
+$("b-abort").onclick=()=>{if(kind==="rom"){E.nmi();log("ABORT (NMI).");}else E.abort();};
+$("b-trigger").onclick=()=>{E.trigger();log("Pendant trigger pulled (IRQ).");};
+$("b-clap").onclick=()=>{E.clap();log("Clap.");};
+$("b-motion").onclick=()=>{const ok=kind==="rom"?E.motion():(E.sense.motion?(E.motion(),true):false);log(ok?"Motion detected.":"Motion detector is off (needs 4B).");};
+$("light").oninput=e=>{if(kind==="rom")E.light=+e.target.value;else E.levels.light=+e.target.value;};
+$("sleep").onchange=e=>{E.sleepSwitch=e.target.checked;};
+$("b-init").onclick=()=>{typeSeq(["RESET","WAIT","3","1"]);log("Initialize: every axis runs to its stop and back. This takes about two minutes.");};
+
+/* ---- programs ---- */
+P.forEach((p,i)=>{const o=document.createElement("option");o.value=i;o.textContent=p.name;$("prog").appendChild(o);});
+function seqFor(p){return ["RESET",p.robot?"A":"1","D",...hex(p.org,4).split("")];}
+function showProg(){current=P[+$("prog").value];$("prog-src").textContent=current.src;$("prog-note").textContent=current.note;$("prog-seq").textContent="Keys: "+seqFor(current).join(" ");buildListing();}
+function loadProg(p){Object.keys(p.bytes).forEach(a=>p.bytes[a].forEach((b,i)=>E.write(+a+i,b)));log("Loaded "+p.name+" ($"+hex(p.org,4)+").");buildListing();}
+$("prog").onchange=showProg;
+$("b-load").onclick=()=>loadProg(current);
+let typing=null;
+function typeSeq(seq){if(typing)return;let i=0;const step=()=>{if(i>=seq.length){typing=null;return;}const k=seq[i++];
+  if(k==="WAIT"){typing=setTimeout(step,1600);return;}press(k);typing=setTimeout(step,k==="RESET"?(kind==="rom"?1800:300):300);};step();}
+$("b-type").onclick=()=>{if(typing)return;loadProg(current);const s=seqFor(current);typeSeq(s);};
+$("b-home").onclick=()=>{const w=E.world;w.x=160;w.y=300;w.th=0;w.trail=[];};
+
+/* ---- listing: static decode of the loaded program, following 3F/83 mode switches ---- */
+const dis={read:a=>E.read(a),mword:Hero.prototype.mword,disasm:Hero.prototype.disasm};
+let rows=[],rowByAddr={};
+const SEGCH={0x37:"H",0x4F:"E",0x0E:"L",0x7E:"O",0x20:"!",0x77:"A",0x3E:"U",0x5B:"S",0x67:"P",0x3D:"d",0x1D:"o",0x15:"n",0x05:"r"};
+function rowsHTML(){return rows.map((x,i)=>x.mode?'<div class="mode">'+x.mode+'</div>':'<div data-i="'+i+'"><span class="a">'+hex(x.a,4)+'</span><span class="b">'+x.b+'</span><span class="'+(x.dt?"dt":x.rl?"rl":"")+'">'+x.t+'</span></div>').join("");}
+function buildListing(){
+  if(!E)return;const p=current;rows=[];rowByAddr={};const data={};(p.data||[]).forEach(d=>data[d[0]]=d);
+  Object.keys(p.bytes).map(Number).sort((a,b)=>a-b).forEach((start,bi)=>{
+    let a=start,r=bi===0?p.robot:false,end=start+p.bytes[start].length;
+    rows.push({mode:(bi===0?"start ":"")+"$"+hex(start,4)});
+    while(a<end){
+      if(data[a]){const d=data[a];const bytes=[];for(let i=0;i<d[1];i++)bytes.push(E.read(a+i));
+        const txt=d[2]==="phon"?".PHONEMES "+bytes.filter(v=>v!==0xFF).map(v=>Hero.PH[v&63]).join(" ")+" FF":".SEGMENTS \""+bytes.map(v=>SEGCH[v&0x7F]||"?").join("")+"\"";
+        rows.push({a,b:bytes.slice(0,3).map(v=>hex(v,2)).join(" ")+(bytes.length>3?"…":""),t:txt,dt:true});a+=d[1];continue;}
+      const d=dis.disasm(a,r),n=Math.min(d.len,3),bs=[];for(let i=0;i<n;i++)bs.push(hex(E.read(a+i),2));
+      rows.push({a,b:bs.join(" ")+(d.len>3?"…":""),t:d.text,rl:d.robot});rowByAddr[a]=rows.length-1;
+      const op=E.read(a);if(!r&&op===0x3F)r=true;else if(r&&op===0x83)r=false;
+      a+=d.len;
+    }
+  });
+  $("listing").innerHTML=rowsHTML();lastRow=-1;
+}
+let lastRow=-1;
+function pcRow(){const pc=E.cpu.pc;if(kind==="hle"&&!(E.mode==="run"||E.mode==="halt"))return undefined;return rowByAddr[pc];}
+function markPC(){
+  const i=pcRow();if(i===lastRow)return;const L=$("listing");
+  if(lastRow>=0){const o=L.querySelector('[data-i="'+lastRow+'"]');if(o)o.classList.remove("pc");}
+  lastRow=i===undefined?-1:i;
+  if(lastRow>=0){const n=L.querySelector('[data-i="'+lastRow+'"]');if(n){n.classList.add("pc");const top=n.offsetTop-L.offsetTop;if(top<L.scrollTop||top>L.scrollTop+L.clientHeight-20)L.scrollTop=top-L.clientHeight/3;}}
+}
+
+/* ---- side panels ---- */
+function pos(m){return kind==="rom"?E.steps[m]:E.pos[m];}
+function regs(){const c=E.cpu,cc=c.getCC();
+  $("regs").innerHTML='<span class="hdr">6808 registers</span>'+[["A",hex(c.a,2)],["B",hex(c.b,2)],["X",hex(c.x,4)],["SP",hex(c.sp,4)],["PC",hex(c.pc,4)+(c.pc>=0xE000?" ROM":"")],["HINZVC",[5,4,3,2,1,0].map(b=>cc>>b&1).join("")]].map(r=>'<span class="k">'+r[0]+'</span><span>'+r[1]+'</span><span></span>').join("");
+  let h='<span class="hdr">Motors: RAM table / physical</span>';
+  h+='<span class="k">Drive</span><span>'+(kind==="rom"?"speed "+E.driveSpeed:Math.round(E.pos[0])+" counts")+'</span><span class="k"></span>';
+  for(let m=1;m<8;m++)h+='<span class="k">'+Hero.MOT[m]+'</span><span>$'+hex(E.read(m-1),2)+' / '+pos(m).toFixed(1)+'</span><span class="k">$'+hex(m-1,4)+'</span>';
+  h+='<span class="k">Sonar</span><span>'+hex(E.read(0x11),2)+' / '+hex(E.read(0x10),2)+'</span><span class="k">$0011/10</span>';
+  $("mpos").innerHTML=h;
+  const pill=$("mode-pill");
+  if(kind==="rom"){const r=c.pc>=0xE000;pill.textContent=c.waiting?"SLEEP / WAI":r?"IN ROM":"USER CODE";pill.className="pill "+(r?"":"robot");}
+  else{const M={exec:"EXECUTIVE",mon:"MONITOR",exam:"EXAMINE",auto:"AUTOLOAD",util:"UTILITY",halt:"HALTED"};
+    if(E.mode==="run"){pill.textContent=E.robot?"ROBOT LANGUAGE":"MACHINE LANGUAGE";pill.className="pill "+(E.robot?"robot":"machine");}else{pill.textContent=M[E.mode]||E.mode.toUpperCase();pill.className="pill";}}
+  $("cyc").textContent=Math.round(E.cycles).toLocaleString()+" CPU cycles";
+}
+function log(m){const L=$("log");const d=document.createElement("div");d.textContent=m;L.appendChild(d);while(L.children.length>60)L.removeChild(L.firstChild);L.scrollTop=L.scrollHeight;}
+
+/* ---- room ---- */
+const cv=$("room"),cx=cv.getContext("2d");
+function fit(){const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.width*380/640*dpr);}
+window.addEventListener("resize",fit);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function draw(){
+  const W=cv.width,k=W/640,w=E.world;cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,W,cv.height);cx.setTransform(k,0,0,k,0,0);
+  const ink=css("--ink"),acc=css("--accent"),a2=css("--accent2"),grid=css("--grid"),mut=css("--muted"),sur=css("--surface"),wall=css("--wall");
+  cx.strokeStyle=grid;cx.lineWidth=1;for(let x=0;x<=640;x+=40){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,380);cx.stroke();}for(let y=0;y<=380;y+=40){cx.beginPath();cx.moveTo(0,y);cx.lineTo(640,y);cx.stroke();}
+  cx.fillStyle=wall;[[430,110,90,70],[90,60,80,35]].forEach(b=>cx.fillRect(b[0],b[1],b[2],b[3]));
+  cx.strokeStyle=wall;cx.lineWidth=4;cx.strokeRect(2,2,636,376);
+  cx.fillStyle=mut;cx.font="11px JetBrains Mono, monospace";cx.fillText("grid = 1 ft",8,370);
+  if(w.trail.length>1){cx.strokeStyle=a2;cx.lineWidth=2;cx.setLineDash([4,4]);cx.beginPath();w.trail.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.stroke();cx.setLineDash([]);}
+  const ha=E.headAngle(),sonar=kind==="rom"?E.sonarOn():E.sense.sonar;
+  if(sonar){const d=E.sonarDistance(),L=Math.min(d,96)/12*40,ang=w.th+ha;cx.strokeStyle=acc;cx.globalAlpha=.55;cx.lineWidth=1.5;cx.setLineDash([2,3]);cx.beginPath();cx.moveTo(w.x,w.y);cx.lineTo(w.x+Math.sin(ang)*L,w.y-Math.cos(ang)*L);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1;}
+  cx.save();cx.translate(w.x,w.y);cx.rotate(w.th);
+  cx.fillStyle=ink;cx.fillRect(-27,6,6,14);cx.fillRect(21,6,6,14);
+  cx.beginPath();for(let i=0;i<8;i++){const a=Math.PI/8+i*Math.PI/4;cx.lineTo(Math.cos(a)*30,Math.sin(a)*30);}cx.closePath();cx.fillStyle=sur;cx.fill();cx.strokeStyle=ink;cx.lineWidth=2.5;cx.stroke();
+  cx.save();cx.translate(0,-18);cx.rotate(E.steerAngle());cx.fillStyle=acc;cx.fillRect(-3,-8,6,16);cx.restore();
+  cx.save();cx.rotate(ha);cx.beginPath();cx.arc(0,0,20,0,Math.PI*2);cx.fillStyle=sur;cx.fill();cx.stroke();
+  cx.fillStyle=ink;cx.fillRect(-7,-14,14,5);
+  const reach=14+pos(1)/0x98*26*Math.cos(pos(2)/0x86*1.2);
+  cx.strokeStyle=ink;cx.lineWidth=6;cx.beginPath();cx.moveTo(14,-6);cx.lineTo(14,-6-reach);cx.stroke();
+  const op=3+pos(5)/0x75*11;cx.save();cx.translate(14,-6-reach);cx.rotate((pos(3)-0x49)/0x49*1.2);cx.strokeStyle=acc;cx.lineWidth=3;cx.beginPath();cx.moveTo(-op/2,0);cx.lineTo(-op/2,-10);cx.moveTo(op/2,0);cx.lineTo(op/2,-10);cx.stroke();cx.restore();
+  cx.restore();cx.restore();
+}
+
+/* ---- main loop ---- */
+let last=performance.now();
+function frame(now){const dt=(now-last)/1000;last=now;try{E.advance(dt);}catch(e){log("Emulator error: "+e.message);}drawSeg();draw();regs();markPC();requestAnimationFrame(frame);}
+(async function boot(){
+  fit();
+  let saved=null;try{saved=localStorage.getItem("hero1rom");}catch(e){}
+  if(saved){try{const s=atob(saved),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);await useRomBytes(b.buffer,false);}catch(e){startHLE();}}
+  else{startHLE();E.key("RESET");log("Power on. Load HERO.ROM to run Heath's real firmware, or try the stand-in now.");}
+  showProg();loadProg(current);requestAnimationFrame(frame);
+})();
+})();
+</script>

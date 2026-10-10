@@ -1,0 +1,1091 @@
+# interp.ann - Robot Interpreter ($E000-$E502) and the native single-step engine ($F7F5-$F939)
+# Emulator experiments that settled questions are noted in the comments (scripts were in /tmp).
+# ---- RAM used by the interpreter and the single-step engine ----
+E  DRVCOUNT   $0007    # drive: encoder counts travelled in the current move (cleared at start; word)
+E  BUSY       $000B    # busy bits: 0 drive distance, 1 steering, 2 arm channel, 3 speech, 4 drive ramp
+E  ABORTREQ   $000C    # abort requests (same bit layout as BUSY), honoured by the IRQ motor service
+E  SLEEPCNT   $000D    # SLEEP: 10 s periods still to sleep (word, battery-backed)
+E  RI_HOOK    $0012    # RAM hook called before every Robot Language step (default RTS)
+E  RI_BADOP   $0015    # RAM hook for unknown robot opcodes (default SEC;RTS = stop)
+E  ROBOTMODE  $0EE1    # $FF = Robot Language (interpret), $00 = Machine Language
+E  CURPC      $0EE2    # address of the robot instruction being executed (shown by ABORT as "Pc.")
+E  CCB_STEER  $0EE4    # steering motor control block (12 bytes, layout at MOTDESC)
+E  CCB_ARM    $0EF0    # arm-channel motor control block (12 bytes; one arm motor at a time)
+E  TICKS      $0EFC    # 1024 Hz tick counter (incremented by the clock IRQ)
+E  DRVDIST    $0EFD    # drive: encoder counts still to go (word, bits 9-0 of the motor word)
+E  DRVNOW     $0F00    # drive: value now on DRIVE ($C2A0), ramped toward DRVTARGET
+E  DRVTARGET  $0F01    # drive: wanted DRIVE value (bit 7 reverse, bit 6 on, 5-0 speed); $3F = stop
+E  CTRL_SH    $0F02    # shadow of CTRL ($C2C0)
+E  POWER_SH   $0F03    # shadow of POWER ($C2E0)
+E  SPK_BASE   $0F15    # speech: address of the bottom of the BF-nesting stack ($0F13)
+E  DRVSPD     $0F1B    # drive: speed field (0-3) of the last drive word
+E  CCB_PTR    $0F1C    # CCB_BUILD: control block being filled
+E  MOTWORD    $0F1E    # motor word being started: mmmssDdd (high byte)
+E  MOTWORDL   $0F1F    # motor word low byte: position / distance
+E  WAITMASK   $0F20    # busy bits to wait on after starting (7/8 = wait, 0 = continue)
+E  BUSYBIT    $0F21    # busy bit(s) of the channel being started
+E  CB_DST     $0F22    # CCB_BUILD copy destination pointer
+E  CB_SRC     $0F24    # CCB_BUILD descriptor pointer (word)
+E  CB_SRCL    $0F25    # low byte of CB_SRC
+E  MALL_PTR   $0F26    # MOVE_LIST: pointer into the 7 position bytes
+E  SAVESP     $0FF0    # SSTEP: monitor stack pointer saved during a step (also a monitor scratch word)
+E  USERFRAME  $0FF4    # pointer to the user register frame: S value, so CC,B,A,XH,XL,PCH,PCL at +1..+7
+E  SWIJMP     $0FF6    # RAM SWI vector: JMP opcode ($7E) ...
+E  SWIVEC     $0FF7    # ... and its target (SSTEP points it at SS_TRAP)
+
+# ===================================================================
+L  E000 RSTEP
+H  E000
+;---------------------------------------------------------------
+; RSTEP - execute one Robot Language instruction
+;
+; The interpreter's whole cycle.  It first offers the instruction at the user PC
+; to SSTEP, which runs any genuine 6800 instruction natively (on the stack) and
+; advances the PC itself.  Only if SSTEP rejects the opcode (it is one of the 59
+; undefined 6800 opcodes, flagged in OPBITMAP) is it looked up in ROBOT_TAB.  A
+; handler does the work and returns A = instruction length, which is added to
+; the PC here (A = 0 when the handler set the PC itself, as a taken branch does).
+; An opcode in neither set goes to the RAM hook RI_BADOP; the default hook sets
+; C, which makes the run loop stop and show the PC.  Emulator: a user hook
+; "INC $0500; LDAA #1; CLC; RTS" at RI_BADOP let a program of three $00 bytes run
+; through (count 3).  The Repeat-mode run loop ($F5B5) calls SSTEP and then
+; RSTEP, so it executes two instructions per pass; breakpoints are compared only
+; between passes (emulator: on a NOP run from $0400 a breakpoint at $0402 hit,
+; ones at $0401 and $0403 never did).  A native instruction costs about 650-800
+; cycles (~0.8 ms) per step in Robot Language (measured).
+;
+; In:        USERFRAME -> user registers; user PC = next instruction
+; Out:       C = 0 executed (user PC advanced), C = 1 unknown opcode (contract)
+; Memory:    writes CURPC; user frame PC; whatever the handler touches
+;---------------------------------------------------------------
+C  E000 interrupts on: motor/speech services run between steps
+C  E001 RI_HOOK: per-step user hook (default RTS)
+C  E004 X = user frame
+C  E007 X = user PC
+C  E009 remember where this instruction starts (ABORT shows it)
+C  E00C SSTEP: run it natively if it is a 6800 instruction
+C  E00F C = 0: done, SSTEP already advanced the PC
+C  E011 C = 1: not 6800 - it is a robot opcode
+C  E014 A = robot opcode
+C  E016 X = dispatch table (op, handler) entries
+C  E019 this entry?
+C  E01D next 3-byte entry
+C  E020 $00 ends the table
+C  E024 RI_BADOP: unknown opcode hook (default SEC = stop)
+C  E027 hook returned C = 0: A = length, carry on
+C  E029 C = 1: report unknown opcode to the run loop
+C  E02A X = handler address
+C  E02C call the handler; it returns A = instruction length (0 = PC already set)
+C  E02E user PC += A
+C  E03A C = 0: instruction executed
+
+L  E03C ROBOT_TAB
+B  E03C Robot opcode dispatch table: opcode byte, handler address; $00 ends it.
+B  E03C 36 of the 59 non-6800 opcodes are robot instructions; the other 23 ($00,$12-$15,$18,
+B  E03C $1A,$38,$3C,$3D,$65,$6B,$75,$7B,$93,$9D,$A3,$B3,$C7,$CD,$CF,$DD,$ED) go to RI_BADOP.
+
+# ---------------- enable / disable ----------------
+L  E0A9 EN_LIGHT
+H  E0A9
+;---------------------------------------------------------------
+; EN_LIGHT - robot op $41: enable the light detector
+;
+; Selects the eye (POWER bit 7) and powers the sense board (bit 5).
+;
+; Out:       A = 1 (instruction length)                         (contract)
+; Memory:    POWER, POWER_SH
+;---------------------------------------------------------------
+C  E0A9 bit 7 eye select + bit 5 sense power
+L  E0AD EN_SOUND
+H  E0AD
+;---------------------------------------------------------------
+; EN_SOUND - robot op $42: enable the sound detector
+;
+; Clears the eye/ear select (bit 7 = 0 selects the ear) and powers the sense board.
+;
+; Out:       A = 1                                              (contract)
+; Memory:    POWER, POWER_SH
+;---------------------------------------------------------------
+C  E0AD interrupts off (redundant: PWR_SET masks again)
+C  E0B2 bit 7 = 0: ear selected
+C  E0B4 sense board power on
+L  E0B8 EN_SONAR
+H  E0B8
+;---------------------------------------------------------------
+; EN_SONAR - robot op $45: power the sonar (POWER bit 1)
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+L  E0BC EN_MOTION
+H  E0BC
+;---------------------------------------------------------------
+; EN_MOTION - robot op $4B: power the motion detector (POWER bit 2)
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+L  E0C0 EN_DISPLAY
+H  E0C0
+;---------------------------------------------------------------
+; EN_DISPLAY - robot op $4E: power the display (POWER bit 4)
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+L  E0C2 EN_SET
+C  E0C2 add the bit(s) to the current power state
+C  E0C5 PWR_SET: write POWER and let it settle
+C  E0C7 length 1
+L  E0CA DIS_LIGHT
+H  E0CA
+;---------------------------------------------------------------
+; DIS_LIGHT - robot op $51: disable the light detector
+;
+; Turns the sense board off only if the eye is the selected input; if the ear is
+; selected the sense board stays on (disabling the unselected detector is a no-op).
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+C  E0CD eye selected?
+C  E0CF no: leave the sound detector running
+C  E0D1 clear bit 5: sense board off
+L  E0D5 DIS_SOUND
+H  E0D5
+;---------------------------------------------------------------
+; DIS_SOUND - robot op $52: disable the sound detector
+;
+; Turns the sense board off only if the ear is the selected input.
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+C  E0D8 eye selected?
+C  E0DA yes: leave the light detector running
+C  E0DC clear bit 5: sense board off
+L  E0E0 DIS_SONAR
+H  E0E0
+;---------------------------------------------------------------
+; DIS_SONAR - robot op $55: sonar power off (POWER bit 1)
+;
+; The manual's table names $55 "Disable Motion"; the ROM clears the sonar bit.
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+L  E0E4 DIS_MOTION
+H  E0E4
+;---------------------------------------------------------------
+; DIS_MOTION - robot op $5B: motion detector power off (POWER bit 2)
+;
+; The manual's table names $5B "Disable Ultrasonic"; the ROM clears the motion bit.
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+L  E0E8 DIS_DISPLAY
+H  E0E8
+;---------------------------------------------------------------
+; DIS_DISPLAY - robot op $5E: display power off (POWER bit 4)
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+L  E0EA DIS_CLR
+C  E0EA remove the bit from the current power state
+C  E0ED PWR_SET: write POWER and let it settle
+L  E0EF RET_LEN1
+C  E0EF length 1
+L  E0F2 PWR_SET
+H  E0F2
+;---------------------------------------------------------------
+; PWR_SET - write the power-control port and wait for it to settle
+;
+; Writes POWER and its shadow inside an interrupt-masked window, then idles
+; $1000 x 8 cycles (about 37 ms) so a newly powered board can settle.
+;
+; In:        B = new POWER value
+; Memory:    POWER, POWER_SH
+;---------------------------------------------------------------
+C  E0F2 mask IRQs: the IRQ code also rewrites POWER from the shadow
+C  E0F3 (NOP after SEI: Heath's habit throughout this ROM)
+C  E0F7 keep the shadow in step
+C  E0FA end of masked window
+C  E0FB about 37 ms settling delay
+L  E102 R_EXEC
+H  E102
+;---------------------------------------------------------------
+; R_EXEC - robot op $3A: return to the Executive ("ready")
+;
+; Abandons the program: jumps to the Executive restart, which resets the stack.
+;---------------------------------------------------------------
+
+# ---------------- motor commands ----------------
+L  E105 MV_IMM_W
+H  E105
+;---------------------------------------------------------------
+; MV_IMM_W - robot op $C3: move motor (immediate word), wait
+;
+; Same as MV_IMM but waits until the motor's channel is idle again.
+;
+; Out:       A = 3                                              (contract)
+;---------------------------------------------------------------
+C  E105 wait for every channel bit (masked to this channel later)
+L  E109 MV_IMM
+H  E109
+;---------------------------------------------------------------
+; MV_IMM - robot op $CC: move motor (immediate word), continue
+;
+; The two bytes after the opcode are the motor word mmmssDdd dddddddd
+; (motor, speed, direction, 10-bit position or drive distance).
+;
+; Out:       A = 3                                              (contract)
+; Memory:    MOTWORD, WAITMASK; starts the motor via MOT_START
+;---------------------------------------------------------------
+C  E109 0 = do not wait
+L  E10A MV_IMM_GO
+C  E10D X = user frame
+C  E110 X = user PC (the opcode)
+C  E112 motor word from the two operand bytes
+C  E117 length 3
+C  E119 MOT_START
+L  E11B MV_EXT_W
+H  E11B
+;---------------------------------------------------------------
+; MV_EXT_W - robot op $F3: move motor, word at an extended address, wait
+;
+; Out:       A = 3                                              (contract)
+;---------------------------------------------------------------
+L  E11F MV_EXT
+H  E11F
+;---------------------------------------------------------------
+; MV_EXT - robot op $FC: move motor, word at an extended address, continue
+;
+; The operand is the address of the motor word, so a program can build or
+; change the word in RAM.  Emulator: F3 0500 with $D0,$40 at $0500 moved the
+; head to $40.
+;
+; Out:       A = 3                                              (contract)
+;---------------------------------------------------------------
+L  E120 MV_EXT_GO
+C  E128 X = operand address
+C  E12A motor word from that address
+L  E133 MV_IDX_W
+H  E133
+;---------------------------------------------------------------
+; MV_IDX_W - robot op $E3: move motor, word at offset,X, wait
+;
+; Out:       A = 2                                              (contract)
+;---------------------------------------------------------------
+L  E137 MV_IDX
+H  E137
+;---------------------------------------------------------------
+; MV_IDX - robot op $EC: move motor, word at offset,X, continue
+;
+; Adds the unsigned offset byte to the user's X register (from the frame) and
+; takes the motor word from there.
+;
+; Out:       A = 2                                              (contract)
+;---------------------------------------------------------------
+C  E13B X = user frame
+C  E13E A:B = user X (low, high)
+C  E142 X = user PC
+C  E144 + unsigned offset byte
+C  E148 build the address in MOTWORD (used as scratch)
+C  E14E X = user X + offset
+C  E151 fetch the motor word
+C  E156 length 2
+L  E15A MV_REL_W
+H  E15A
+;---------------------------------------------------------------
+; MV_REL_W - robot op $D3: move motor relative, wait
+;
+; Out:       A = 3                                              (contract)
+;---------------------------------------------------------------
+L  E15E MV_REL
+H  E15E
+;---------------------------------------------------------------
+; MV_REL - robot op $DC: move motor relative, continue
+;
+; Turns a relative word into an absolute one: target = position byte -/+ the
+; low 8 bits of the distance (D = 1 subtracts), 8-bit wraparound, bits 9-8 are
+; ignored.  A target that wraps past 0 lands high, so the motor runs to its top
+; limit - the manual's "reverse and go all the way to the other end".  Emulator:
+; head at $61, D3 CC 70 (-$70) gave target $F1 and the head stopped at $C2.
+; Drive words (motor 0) pass through unchanged: drive distances are always
+; relative.
+;
+; Out:       A = 3                                              (contract)
+; Memory:    MOTWORD/MOTWORDL rewritten to the absolute target
+;---------------------------------------------------------------
+C  E169 motor word from the operand
+C  E16F B keeps the high byte for the D bit
+C  E170 rotate mmm (bits 7-5) round to bits 2-0
+C  E174 A = motor number
+C  E176 drive: distance stays relative
+C  E178 position byte address = $0000 + motor - 1
+C  E179 build X = $00,(m-1) through the stack
+C  E17C X = the position byte's address
+C  E17F drop the scratch word
+C  E181 A = current position
+C  E183 D bit (bit 10 of the word)?
+C  E187 D = 1: position - distance
+C  E18C D = 0: position + distance
+C  E18F absolute target, 8-bit wrap
+C  E192 length 3
+
+L  E194 MOT_START
+H  E194
+;---------------------------------------------------------------
+; MOT_START - start (and optionally wait for) the move in MOTWORD
+;
+; Common motor start for every move opcode, MOVE_LIST and the Learn-mode
+; MOT_GO.  The motor field picks the channel: 0 drive, 7 steering (CCB_STEER,
+; busy bit 1), 1-6 the shared arm channel (CCB_ARM, busy bit 2).  It first waits
+; for that channel to go idle - so a second arm command queues behind the first
+; (the manual's "one arm motor at a time") - then builds the control block, sets
+; the busy bit (the IRQ motor service then steps the motor) and, if WAITMASK
+; asks for it, waits for the bit to clear.
+;
+; In:        MOTWORD/MOTWORDL = absolute motor word; WAITMASK = 0 or busy bits
+;            A = value to hand back (the instruction length)
+; Out:       A = same value                                     (contract)
+; Memory:    BUSY, ABORTREQ, BUSYBIT, WAITMASK, a CCB, DRVTARGET, CTRL
+;---------------------------------------------------------------
+C  E194 keep the instruction length
+C  E198 motor field mmm
+C  E19D 000 = drive
+C  E19F 111 = steering
+C  E1A3 steering control block
+C  E1A6 wait only if the caller wants to
+C  E1AB steering busy bit
+L  E1AF MS_ARM
+C  E1AF motors 1-6 share the arm control block
+C  E1B2 wait only if the caller wants to
+C  E1B7 arm busy bit
+L  E1B9 MS_CHAN
+L  E1BC MS_WAITFREE
+C  E1BC wait until the channel is idle (IRQs on)
+C  E1C0 CCB_BUILD: fill the control block for this move
+L  E1C4 MS_DRIVE
+C  E1C4 drive: wait only if the caller wants to
+L  E1CB MS_DRVFREE
+C  E1CB wait for the previous drive move to end
+C  E1CF masked window: clear stale drive abort requests
+C  E1D3 bits 4 and 0
+C  E1D8 drive busy = distance (bit 0) + ramp (bit 4)
+C  E1DD DRV_SETUP: distance, odometer, A = wanted DRIVE value
+C  E1E0 the 1024 Hz ramp walks DRIVE toward this
+L  E1E3 MS_BUSY
+C  E1E3 masked window: mark the channel busy - the IRQ service starts now
+C  E1ED recover the length
+L  E1F1 MS_WAITDONE
+C  E1F1 wait while a waited-on bit is still busy
+
+L  E1F6 MOVE_ALL
+H  E1F6
+;---------------------------------------------------------------
+; MOVE_ALL - robot op $FD: move all seven position motors, absolute
+;
+; Seven position bytes follow the opcode (extend, shoulder, rotate, pivot,
+; gripper, head, steering).  Falls into MOVE_LIST.
+;
+; Out:       A = 8                                              (contract)
+;---------------------------------------------------------------
+C  E1F6 X = user frame
+C  E1F9 X = user PC
+C  E1FB X = first position byte
+L  E1FC MOVE_LIST
+H  E1FC
+;---------------------------------------------------------------
+; MOVE_LIST - move motors 1-7 in turn to the 7 positions at X
+;
+; Builds word $28xx (motor 1, slow) and adds $20 per motor up to $E8xx
+; (steering); each move waits for its channel, so the motors run one after
+; another at slow speed.  Used by MOVE_ALL and twice by R_ZERO.
+;
+; In:        X = 7 position bytes
+; Out:       A = 8                                              (contract)
+; Memory:    MALL_PTR, MOTWORD, WAITMASK; moves the motors
+;---------------------------------------------------------------
+C  E1FF motor 1 (extend), speed 01 slow, D = 0
+L  E201 ML_LOOP
+C  E207 next position byte
+C  E20D target
+C  E210 wait on arm (4) and steering (2) - each move completes in turn
+C  E215 MOT_START: run this motor to its position
+C  E21B next motor number
+C  E21D past steering (111) the field wraps to 000: done
+C  E221 length 8
+
+L  E224 CCB_BUILD
+H  E224
+;---------------------------------------------------------------
+; CCB_BUILD - fill a motor control block from MOTDESC and the motor word
+;
+; Picks descriptor E29F + 11 x motor (motors 1-7) and copies its first 7 bytes
+; into the block.  The speed field picks the step rate byte (descriptor byte 8,
+; 9 or 10 for slow, medium, fast; speed 00, undocumented, falls on byte 7 - the
+; select byte - giving a very slow $40/$80/$100 ticks per step).  Direction and
+; distance come from comparing the target with the position byte, and the
+; distance in units is scaled to steps by shifting it once per bit of the
+; steps-per-unit mask.  Finally the arm motor's select bit goes to CTRL.
+;
+; In:        X = control block, A = motor word & $E0, MOTWORD/MOTWORDL
+; Memory:    CCB_PTR, CB_DST, CB_SRC, the block, CTRL, CTRL_SH
+;---------------------------------------------------------------
+C  E224 remember the block
+C  E227 copy destination
+C  E22A A = motor x 8 (mmm000)
+C  E22D B = motor x 2
+C  E22F A = motor x 10
+C  E230 B = motor
+C  E231 A = motor x 11
+C  E233 + (MOTDESC - 11): the descriptor for this motor
+C  E23A CB_SRC -> descriptor
+C  E23D copy bytes 0-6
+C  E23F CB_COPY
+C  E241 X -> descriptor byte 7
+C  E244 byte 7 = CTRL select bit(s) for this motor
+C  E247 speed field ss
+L  E24C CB_SPEED
+C  E24C step to byte 7 + ss
+L  E253 CB_RATE
+C  E253 ticks per step for this speed
+C  E258 +7 countdown
+C  E25A +8 reload
+C  E25C X -> position byte
+C  E25E current position
+C  E260 - target
+C  E263 no borrow: target <= position, run down
+C  E265 target above: direction 0 (position increases)
+C  E266 A = target - position
+L  E269 CB_DOWN
+C  E269 direction 4 (position decreases)
+L  E26B CB_DIR
+C  E26E +9 = direction, phase index 0
+C  E270 +$B = distance in units (low byte)
+C  E272 +$A = 0 (high byte)
+C  E274 steps-per-unit mask ($1F, $07 or $03)
+L  E276 CB_SCALE
+C  E276 distance x 2 per mask bit: units -> steps
+C  E27D select byte for CTRL
+C  E27F steering has none
+C  E281 masked window: CTRL bits 7/6 pick which motor of a phase pair is driven
+C  E286 keep the clock-register/strobe bits
+C  E28F end of masked window
+L  E291 CB_COPY
+H  E291
+;---------------------------------------------------------------
+; CB_COPY - copy B bytes from (CB_SRC) to (CB_DST), advancing both
+;
+; In:        B = count, CB_SRC, CB_DST
+; Out:       CB_SRC, CB_DST advanced by B                       (contract)
+;---------------------------------------------------------------
+C  E29D the copy destination pointer (LE29D+2 = MOTDESC-11 is only an address)
+
+L  E2AA MOTDESC
+R  E2AA E2B4 fcb 11
+R  E2B5 E2BF fcb 11
+R  E2C0 E2CA fcb 11
+R  E2CB E2D5 fcb 11
+R  E2D6 E2E0 fcb 11
+R  E2E1 E2EB fcb 11
+R  E2EC E2F6 fcb 11
+B  E2AA Motor descriptors, 11 bytes per motor 1-7.  Bytes 0-6 are copied into the 12-byte
+B  E2AA control block (CCB_STEER / CCB_ARM), which the 1024 Hz IRQ motor service steps:
+B  E2AA   +0  phase nibble mask: $F0 upper or $0F lower half of the port
+B  E2AA   +1  steps per position unit - 1 ($1F 32, $07 8, $03 4); also the scale shift
+B  E2AA   +2  phase port, word ($C260 / $C280)
+B  E2AA   +4  address of the position byte, word ($0000-$0006)
+B  E2AA   +6  limit switch mask on $C260 ($00 = no switch).  The IRQ service (LF0EF) checks
+B  E2AA       bits 6-4 while the position decreases (a closed switch zeroes the position byte:
+B  E2AA       automatic re-homing) and bits 3-1 while it increases, so to the ROM bits 6-4 are
+B  E2AA       the position-0 end.  The brief/emulator names (bit 6 steer CW, 5 arm up) put the
+B  E2AA       steering and shoulder switches the other way round - unresolved.
+B  E2AA Descriptor only:
+B  E2AA   +7  CTRL select bits ($80 rotate/shoulder/head, $40 pivot/gripper/extend, $00 steering)
+B  E2AA   +8  ticks per step, slow   +9 medium   +10 fast  (1024 Hz ticks)
+B  E2AA Control block only: +7 tick countdown, +8 reload, +9 phase index (bits 1-0) and
+B  E2AA direction (bit 2 = decreasing), +$A/+$B steps still to go.
+B  E2AA Emulator: head 15 units took 2.82/1.88/1.41 s at slow/medium/fast = 480 steps x 6/4/3 ticks.
+C  E2AA motor 1 extend:   upper $C280, 32 steps/unit, pos $0000, no switch, sel $40, 6/4/3
+C  E2B5 motor 2 shoulder: lower $C280, 32 steps/unit, pos $0001, switches $24, sel $80, 6/3/2
+C  E2C0 motor 3 rotate:   lower $C260, 8 steps/unit, pos $0002, no switch, sel $80, 6/3/2
+C  E2CB motor 4 pivot:    lower $C260, 8 steps/unit, pos $0003, no switch, sel $40, 7/5/3
+C  E2D6 motor 5 gripper:  lower $C280, 4 steps/unit, pos $0004, no switch, sel $40, 6/3/2
+C  E2E1 motor 6 head:     upper $C280, 32 steps/unit, pos $0005, switches $12, sel $80, 6/4/3
+C  E2EC motor 7 steering: upper $C260, 8 steps/unit, pos $0006, switches $48, sel $00, 6/3/2
+
+L  E2F7 DRV_SETUP
+H  E2F7
+;---------------------------------------------------------------
+; DRV_SETUP - prepare a drive move from the motor word
+;
+; Loads the 10-bit encoder distance into DRVDIST (counted down by the drive
+; encoder IRQ), clears the travelled counter DRVCOUNT and returns the DRIVE
+; value to ramp to: speed byte from DRV_SPEEDS, bit 7 set for D = 1 (reverse).
+;
+; In:        MOTWORD/MOTWORDL = drive word 000ssDdd dddddddd
+; Out:       A = wanted DRIVE value                             (contract)
+; Memory:    DRVDIST, DRVSPD, DRVCOUNT
+;---------------------------------------------------------------
+C  E2F7 distance bits 9-8
+C  E2FF distance bits 7-0
+C  E30B speed field ss
+C  E30D to 0-3
+L  E313 DS_IDX
+L  E319 DS_SPEED
+C  E319 DRIVE value for this speed
+C  E31E D bit: reverse?
+C  E322 bit 7 = reverse
+L  E324 DS_CLR
+C  E324 restart the travelled-distance counter
+L  E32B DRV_SPEEDS
+R  E32B E32E fcb 4
+C  E32B DRIVE values for ss = 00 off, 01 on+$24, 10 on+$32, 11 on+$3F
+
+# ---------------- speech ----------------
+L  E32F SPK_IDX_W
+H  E32F
+;---------------------------------------------------------------
+; SPK_IDX_W - robot op $62: speak the phrase at offset,X and wait
+;
+; Out:       A = 2                                              (contract)
+;---------------------------------------------------------------
+C  E32F wait on the speech busy bit
+L  E333 SPK_IDX
+H  E333
+;---------------------------------------------------------------
+; SPK_IDX - robot op $61: speak the phrase at offset,X, continue
+;
+; Out:       A = 2                                              (contract)
+;---------------------------------------------------------------
+L  E334 SPK_IDX_GO
+C  E337 length 2, popped at the end
+C  E33D A:B = user X (low, high)
+C  E343 + unsigned offset: phrase address
+L  E349 SPK_EXT_W
+H  E349
+;---------------------------------------------------------------
+; SPK_EXT_W - robot op $72: speak the phrase at an extended address, wait
+;
+; Out:       A = 3                                              (contract)
+;---------------------------------------------------------------
+L  E34D SPK_EXT
+H  E34D
+;---------------------------------------------------------------
+; SPK_EXT - robot op $71: speak the phrase at an extended address, continue
+;
+; Out:       A = 3                                              (contract)
+;---------------------------------------------------------------
+L  E34E SPK_EXT_GO
+C  E351 length 3, popped at the end
+C  E359 A:B = phrase address (low, high)
+L  E35F SPEAK_AB
+H  E35F
+;---------------------------------------------------------------
+; SPEAK_AB - start speaking the phrase at B:A (ROM entry, used by the start-up
+; "HEro 1" greeting)
+;
+; Pushes a dummy "length" so it shares the exit of the speak opcodes.  Powers
+; the speech board, idles about 89 ms for it to come up, hands the phrase to
+; the speech engine (which says the first phoneme now and the rest on
+; speech-request interrupts), sets busy bit 3 and waits if WAITMASK bit 3 is
+; set.  There is no wait for a phrase already playing: a new phrase simply
+; replaces it (resets the BF nesting stack).
+;
+; In:        B:A = phrase address (high, low); WAITMASK
+; Out:       A = the value pushed first (instruction length)    (contract)
+; Memory:    POWER, POWER_SH, BUSY, speech pointers
+;---------------------------------------------------------------
+C  E35F dummy length = A (meaningless to this caller)
+L  E360 SPK_START
+C  E360 save phrase address low byte
+C  E361 speech board power bit
+C  E363 masked window: POWER and shadow together
+C  E36E end of masked window
+C  E36F 10000 x 8 cycles = 89 ms for the SC-01 to power up
+L  E372 SPK_DELAY
+C  E375 A = phrase address low byte
+C  E376 X = bottom of the speech nesting stack
+C  E379 store B:A there and say the first phoneme
+C  E37C C = 1: phrase was empty (FF straight away)
+C  E37E masked window: speech busy
+L  E38A SPK_WAIT
+C  E38A wait for the phrase to finish if asked to
+L  E38E SPK_DONE
+C  E38E A = instruction length
+
+# ---------------- abort ----------------
+L  E390 ABT_DRIVE
+H  E390
+;---------------------------------------------------------------
+; ABT_DRIVE - robot op $02: stop the drive motor
+;
+; Sets the ramp target to stop and requests aborts for the distance and ramp
+; bits; returns once the IRQ service has cleared them.  Also called by SLEEP.
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+C  E390 ramp target: motor off
+C  E395 drive distance (0) + ramp (4) bits
+L  E399 ABT_STEER
+H  E399
+;---------------------------------------------------------------
+; ABT_STEER - robot op $03: stop the steering motor
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+L  E39D ABT_ARM
+H  E39D
+;---------------------------------------------------------------
+; ABT_ARM - robot op $04: stop the arm channel (head, shoulder, extend,
+; rotate, pivot, gripper)
+;
+; Sets the channel's bit in ABORTREQ if it is busy; the IRQ motor service
+; zeroes the step count and drops the busy bit on its next step.  Waits for
+; that, so the motor is stopped when this returns.
+;
+; In:        (ABT_CHAN) A = busy bit(s)
+; Out:       A = 1                                              (contract)
+; Memory:    ABORTREQ
+;---------------------------------------------------------------
+L  E39F ABT_CHAN
+C  E39F masked window while testing BUSY
+C  E3A3 not running: nothing to abort
+C  E3A6 request the abort
+C  E3AB end of masked window
+L  E3AC ABT_WAIT
+C  E3AC wait for the IRQ service to stop it
+L  E3B2 ABT_SPEECH
+H  E3B2
+;---------------------------------------------------------------
+; ABT_SPEECH - robot op $05: stop speech
+;
+; Cuts the speech board's power and clears the speech busy bit at once.
+;
+; Out:       A = 1                                              (contract)
+; Memory:    POWER, POWER_SH, BUSY
+;---------------------------------------------------------------
+C  E3B2 clear busy bit 3
+C  E3B4 clear POWER bit 3 (speech power)
+C  E3B6 masked window: power and busy change together
+L  E3C6 ABT_DONE
+C  E3C6 end of masked window
+C  E3C7 length 1
+
+# ---------------- branch if busy ----------------
+L  E3CA BR_DRIVE
+H  E3CA
+;---------------------------------------------------------------
+; BR_DRIVE - robot op $1C: branch if the drive is busy
+;
+; Out:       A = 2 not taken, 0 taken (PC set)                  (contract)
+;---------------------------------------------------------------
+L  E3CE BR_STEER
+H  E3CE
+;---------------------------------------------------------------
+; BR_STEER - robot op $1D: branch if the steering is busy
+;
+; Out:       A = 2 not taken, 0 taken (PC set)                  (contract)
+;---------------------------------------------------------------
+L  E3D2 BR_ARM
+H  E3D2
+;---------------------------------------------------------------
+; BR_ARM - robot op $1E: branch if the arm channel is busy
+;
+; Out:       A = 2 not taken, 0 taken (PC set)                  (contract)
+;---------------------------------------------------------------
+L  E3D6 BR_SPEECH
+H  E3D6
+;---------------------------------------------------------------
+; BR_SPEECH - robot op $1F: branch if speech is busy
+;
+; Like a 6800 branch: target = address of the next instruction + signed
+; offset.  "1E FE" waits for the arm (emulator: a head move then 1E FE looped
+; on itself until the move ended).
+;
+; In:        (BR_TEST) A = busy bit to test
+; Out:       A = 2 not taken, 0 taken (user PC already set)     (contract)
+; Memory:    user frame PC
+;---------------------------------------------------------------
+L  E3D8 BR_TEST
+C  E3D8 channel busy?
+C  E3DC no: just step over the 2-byte instruction
+L  E3DF BR_TAKE
+C  E3E4 offset negative?
+C  E3EB A:B = user PC
+C  E3F1 + offset, high byte 0
+L  E3F7 BR_BACK
+C  E400 + offset, high byte $FF (sign extended)
+L  E404 BR_SET
+C  E404 + 2: relative to the next instruction
+C  E40B user PC = branch target
+C  E40F length 0: PC already set
+
+L  E411 TO_MACHINE
+H  E411
+;---------------------------------------------------------------
+; TO_MACHINE - robot op $83: change to Machine Language
+;
+; Clears ROBOTMODE; the run loop then runs the rest natively at full speed
+; until an SWI ($3F) sets it again (see SS_SWI).
+;
+; Out:       A = 1                                              (contract)
+;---------------------------------------------------------------
+
+L  E417 R_ZERO
+H  E417
+;---------------------------------------------------------------
+; R_ZERO - robot op $21: initialise every position motor
+;
+; Pretends every motor is at its top end (writes the maxima to $0000-$0006),
+; then moves all to 0: each runs the full travel downward and either stalls at
+; its stop or hits its low-end limit switch, which zeroes the position byte.
+; Then moves to the rest pose 00 00 4D 00 00 62 49.  Head uses $C9, above the
+; manual's $C2 range, for margin (inference).  Emulator: about 120 s, ending
+; with positions 00 00 4D 00 00 62 for motors 1-6.
+;
+; Out:       A = 1                                              (contract)
+; Memory:    $0000-$0006; moves all seven motors
+;---------------------------------------------------------------
+C  E417 gripper max
+C  E41B pivot max
+C  E41F rotate max
+C  E423 extend max
+C  E427 shoulder max
+C  E42B head (above the $C2 limit)
+C  E42F steering max
+C  E433 MOVE_LIST: all motors down to 0
+C  E439 MOVE_LIST: to the rest pose
+L  E442 ZERO_TAB
+R  E442 E448 fcb 7
+R  E449 E44F fcb 7
+C  E442 all motors to 0
+C  E449 rest pose: rotate $4D, head $62 (ahead), steering $49 (straight)
+
+L  E450 R_SLEEP
+H  E450
+;---------------------------------------------------------------
+; R_SLEEP - robot op $87: sleep n x 10 s
+;
+; Obeyed only with the Sleep switch in Sleep and n <> 0.  Stores n in
+; SLEEPCNT, aborts drive, steering, arm and speech, advances the user PC past
+; itself (the handler does not expect to return) and sets POWER bit 6, which
+; fires the sleep one-shot and drops +5 V.  Every 10 s the hardware wakes the
+; CPU through RESET; the reset code counts SLEEPCNT down, sleeps again, and at
+; 0 resumes the program at the saved PC from battery-backed RAM.  Emulator
+; (which does not cut power): WAI was woken by the next tick IRQ, so E483 ran
+; and the PC advanced by 3 a second time, skipping the next 3 bytes; on the
+; real robot the supply is expected to fail first (inference).
+;
+; Out:       A = 3 (only if sleep is refused, or WAI returns)  (contract)
+; Memory:    SLEEPCNT, POWER, user PC; aborts all motion and speech
+;---------------------------------------------------------------
+C  E450 bit 1: 1 = switch in Normal
+C  E455 not in Sleep position: ignore the command
+C  E45C X = sleep count
+C  E45E zero periods: ignore
+C  E460 the reset code counts this down
+C  E462 ABT_DRIVE: stop the drive motor
+C  E465 ABT_STEER: stop the steering motor
+C  E468 ABT_ARM: stop the arm motor
+C  E46B ABT_SPEECH: stop speech
+C  E46E user PC += 3 now: resumption is through RESET, not through RSTEP
+C  E47D POWER = sleep bit only: everything else off
+C  E482 wait here while +5 V collapses
+L  E483 SLP_NONE
+C  E483 length 3
+
+L  E486 R_PAUSE
+H  E486
+;---------------------------------------------------------------
+; R_PAUSE - robot op $8F: pause n/16 s
+;
+; Each unit waits for TICKS to advance by $40 (64 ticks = 62.5 ms).  Emulator:
+; 8F 00 10 took 1.000 s.  Needs IRQs enabled (the CMPA wait is for an exact
+; value).  PAUSE_DEX is also called by Learn mode with X = count + 1.
+;
+; Out:       A = 3                                              (contract)
+;---------------------------------------------------------------
+C  E48B X = unit count
+L  E48D PS_LOOP
+C  E48F target tick count = now + 64
+L  E494 PS_TICK
+C  E494 wait for it
+L  E499 PAUSE_DEX
+H  E499
+;---------------------------------------------------------------
+; PAUSE_DEX - mid-loop entry of R_PAUSE: wait (X - 1) x 62.5 ms
+;
+; Learn mode calls it with X = count + 1 to dwell between records.  Returns
+; A = 3 like the opcode.
+;
+; In:        X = units + 1
+; Out:       A = 3, X = 0                                       (contract)
+;---------------------------------------------------------------
+L  E49C PS_DONE
+C  E49C length 3
+
+# ---------------- the ROM's own Robot Language program ----------------
+L  E49F DEMO
+R  E49F E4D5 robot
+H  E49F
+;---------------------------------------------------------------
+; DEMO - built-in Robot Language exercise loop (runs in Robot Language)
+;
+; Nothing in the ROM jumps to, loads or tabulates $E49F (searched for the
+; address as a word and as split LDAA/LDAB pairs); it runs only when keyed in by
+; hand (A, DO, E49F) - probably a factory or service exercise (inference).  It
+; mixes native and robot instructions and never ends: whenever a channel is
+; free it gives it more work - the arm/head walks through the 14 words at
+; DEMO_MOVES (head sweeps $80-$B0 with shoulder nods, pivot down once),
+; steering swings between $25 and $6E, the drive shuttles 32 counts forward and
+; back (B bit 0 picks the direction), and the phrase at DEMO_TALK repeats.
+; Emulator: all four ran concurrently for 24 s and more.
+;
+; Registers: X walks DEMO_MOVES, B counts drive legs
+;---------------------------------------------------------------
+C  E49F B = drive leg counter
+L  E4A0 DEMO_TOP
+C  E4A0 X = first arm word
+C  E4A3 arm still moving: skip
+C  E4A5 next arm/head word, continue
+C  E4A7 advance to the next word
+C  E4A9 steering still moving: skip
+C  E4AB swing one way...
+C  E4AE ...
+C  E4B1 (normally still busy here)
+C  E4B3 ...and back
+C  E4B9 odd leg?
+C  E4BD drive still moving: skip
+C  E4BF forward 32 counts, fast
+C  E4C4 drive still moving: skip
+C  E4C6 reverse 32 counts, fast
+C  E4C9 next leg
+C  E4CA still talking: skip
+C  E4CC say it again
+C  E4CF end of the move list?
+C  E4D4 start the list again
+L  E4D6 DEMO_MOVES
+R  E4D6 E4D7 fcb 2
+R  E4D8 E4D9 fcb 2
+R  E4DA E4DB fcb 2
+R  E4DC E4DD fcb 2
+R  E4DE E4DF fcb 2
+R  E4E0 E4E1 fcb 2
+R  E4E2 E4E3 fcb 2
+R  E4E4 E4E5 fcb 2
+R  E4E6 E4E7 fcb 2
+R  E4E8 E4E9 fcb 2
+R  E4EA E4EB fcb 2
+R  E4EC E4ED fcb 2
+R  E4EE E4EF fcb 2
+R  E4F0 E4F1 fcb 2
+B  E4D6 DEMO motor words (mmmssDdd dddddddd), used by "EC 00" (MOVE ABS 0,X)
+C  E4D6 head to $80, medium
+C  E4D8 shoulder to $5A, medium
+C  E4DA pivot to $A5 (down), medium
+C  E4DC shoulder to $37, medium
+C  E4DE shoulder to $5A, medium
+C  E4E0 head to $90, medium
+C  E4E2 shoulder to $37, medium
+C  E4E4 shoulder to $5A, medium
+C  E4E6 head to $A0, medium
+C  E4E8 shoulder to $37, medium
+C  E4EA shoulder to $5A, medium
+C  E4EC head to $B0, medium
+C  E4EE shoulder to $37, medium
+C  E4F0 shoulder to $5A, medium
+L  E4F2 DEMO_TALK
+R  E4F2 E502 phon
+C  E4F2 DEMO phrase, roughly "KEN-JEE OO-RAH-TAH" (probably a name; inference) + pauses
+
+# ===================================================================
+# Native single-step engine
+L  F7F5 OPLEN
+H  F7F5
+;---------------------------------------------------------------
+; OPLEN - classify a 6800 opcode: legal?, length, relative branch?
+;
+; Looks the opcode up in OPBITMAP (one bit per opcode, MSB first; 1 = not a 6800
+; instruction).  For a legal opcode the length comes from the opcode's
+; addressing-mode bits: $20-$2F and $8D (BSR) are 2-byte relative branches,
+; other $00-$5F are 1 byte, $8C/$8E/$CE (16-bit immediates) and the extended
+; columns ($x where bits 5-4 = 11) are 3, everything else is 2.  The SBCB #$FF
+; turns the carry of the last compare into "+1 if 3 bytes".
+;
+; In:        A = opcode
+; Out:       A preserved; B = length (1-3), Z = 0              (contract)
+;            not 6800: B = 0, Z = 1, C = 1
+;            C = 0 only for relative branches (incl. BSR)
+;---------------------------------------------------------------
+O  F7F7  #@F91A-1
+C  F7F7 X = bitmap - 1 (pre-incremented below)
+L  F7FA OL_BYTE
+C  F7FA X = OPBITMAP + opcode / 8
+C  F7FB B ends as (opcode & 7) - 8
+C  F7FF bitmap byte
+L  F801 OL_BIT
+C  F801 rotate 8 - (opcode & 7) times: C = bit 7 - (opcode & 7)
+C  F806 C = 1: not a 6800 opcode (B = 0, Z = 1)
+C  F808 $30-$5F: inherent
+C  F80C $20-$2F: relative branch, 2 bytes (C = 0)
+L  F810 OL_NOTBR
+C  F810 $00-$1F, $30-$5F: 1 byte (C = 1)
+C  F814 BSR: 2 bytes, relative (C = 0)
+C  F818 $8C/$8E/$CC/$CE all become $8C
+C  F81A CPX/LDS/LDX # : 3 bytes (C = 0 here)
+C  F81E bits 5-4 = 11: extended (C = 0), else C = 1
+L  F822 OL_SIZE
+C  F822 B = 1 if C = 0 (3 bytes), 0 if C = 1 (2 bytes); C = 1 after
+L  F824 OL_LEN2
+L  F825 OL_LEN1
+L  F826 OL_DONE
+
+L  F827 KEY_SS
+H  F827
+;---------------------------------------------------------------
+; KEY_SS - SS key: single-step the user program and show the next instruction
+;
+; In Robot Language one step is one RSTEP (a robot instruction or one native
+; instruction); otherwise one SSTEP.  Then shows the new PC and its opcode.
+;
+; Memory:    as RSTEP / SSTEP; display
+;---------------------------------------------------------------
+C  F827 Robot Language?
+C  F82C RSTEP: one robot or native instruction
+L  F831 SS_NATIVE
+C  F831 SSTEP: one native instruction (an illegal opcode is just not run)
+L  F834 SS_SHOW
+C  F837 X = user PC
+C  F839 show address and data
+
+L  F83C SSTEP
+H  F83C
+;---------------------------------------------------------------
+; SSTEP - execute one native 6800 instruction of the user program
+;
+; Copies the instruction into a 7-byte buffer on the monitor stack:
+;     op  b1  b2  SWI  SWI  next-PC(hi)  next-PC(lo)
+; with unused operand bytes replaced by NOP ($01).  A relative branch gets its
+; offset rewritten to 2, so if taken it skips the first SWI and lands on the
+; second; the trap can tell the cases apart by which SWI fired.  Calls and
+; control transfers that must not run from the buffer are simulated instead:
+; BSR/JSR (SS_CALL), JMP (SS_JMPX, SS_SKIP2), RTS (SS_RTS), RTI (SS_RTI) and
+; SWI (SS_SWI).  Anything else is run for real: the RAM SWI vector is pointed
+; at SS_TRAP and an RTI is done from the user frame with its PC = the buffer, so
+; the instruction runs with the user's own A, B, X, CC and stack pointer (frame
+; + 7); its SWI then pushes the new user frame on the user stack.  Emulator:
+; BSR, JSR ext, JMP idx, JMP ext, RTS, RTI and taken/untaken Bcc all traced
+; through these paths with the expected PC and frame.
+;
+; In:        USERFRAME -> user registers, PC = instruction
+; Out:       C = 0 executed: USERFRAME, user PC and registers updated
+;            C = 1 not a 6800 opcode: nothing done              (contract)
+; Memory:    SAVESP, SWIVEC, user frame, user stack, ROBOTMODE (SWI)
+;---------------------------------------------------------------
+C  F83C SAVESP = stack top above the buffer
+C  F842 buffer +5/+6: user PC (made next-PC below)
+C  F848 X = user PC
+C  F84A buffer +3/+4: two SWIs
+C  F84E buffer +0..+2: the instruction's three bytes
+C  F857 OPLEN: B = length, C = 0 for relative branches, Z = 1 if not 6800
+C  F859 legal 6800 instruction
+C  F85B not 6800: drop the buffer
+C  F85E C = 1: let the interpreter have it
+L  F860 SS_PATCH
+C  F860 X -> buffer
+C  F861 not a relative branch
+C  F863 Bcc/BSR offset := 2 (taken lands on the second SWI)
+L  F865 SS_NOPS
+C  F865 NOP
+C  F869 3 bytes: nothing to pad
+C  F86B 2 bytes: pad b2
+C  F86D 1 byte: pad b1
+L  F86F SS_NOP2
+L  F871 SS_NEXTPC
+C  F871 buffer next-PC = PC + length
+L  F87A SS_SETPC
+C  F87A user frame PC = A:B (next PC; SS_CALL re-enters with junk, overwritten later)
+C  F881 B = 6: frame copy count for SS_CALL / SS_RTS
+C  F883 peek at the opcode
+C  F885 $8D/$9D/$AD/$BD: BSR or JSR
+C  F88C JMP idx
+C  F890 JMP ext
+C  F894 RTS
+C  F898 RTI
+C  F89C SWI
+C  F8A0 user PC = buffer address (S = buffer after the PULA)
+C  F8A2 opcode back in place
+C  F8A3 SWI will now come to SS_TRAP
+C  F8A9 S = user frame
+C  F8AC run the instruction in the buffer with the user's registers
+L  F8AD SS_TRAP
+H  F8AD
+;---------------------------------------------------------------
+; SS_TRAP - SWI after a stepped instruction (entered via SWIJMP)
+;
+; The stacked PC is one past the SWI that fired.  First SWI: the instruction
+; fell through, so the user PC is the next-PC word stored behind the SWIs.
+; Second SWI (only a taken branch gets there): the PC is next-PC plus the
+; branch's original offset, read back from the user's code because the buffer
+; copy was patched to 2.  The new frame address becomes USERFRAME.
+;
+; In:        S = user frame just pushed by SWI
+; Out:       C = 0 to SSTEP's caller                            (contract)
+; Memory:    USERFRAME, user frame PC
+;---------------------------------------------------------------
+C  F8AD back on, IRQs were masked by SWI
+C  F8AE X -> new user frame
+C  F8AF X = PC after the SWI that fired
+C  F8B1 + 1
+C  F8B4 = SAVESP only for the second SWI (taken branch)
+C  F8B7 fell through: X -> next-PC word
+C  F8B9 taken: X -> next-PC word
+C  F8BA X = next PC
+C  F8BC X -> offset byte in the user's code
+C  F8BD B = original offset
+C  F8C1 negative: A = $FF (sign extend)
+L  F8C2 SS_TARGET
+C  F8C3 X -> next-PC word again
+L  F8C5 SS_ADDPC
+C  F8C5 A:B = next PC (+ offset if taken)
+C  F8CA frame PC = result
+C  F8CE X = S convention (frame at +1..+7)
+L  F8CF SS_SAVEFR
+C  F8CF USERFRAME = new frame
+L  F8D2 SS_EXIT
+C  F8D2 back on the monitor stack
+C  F8D5 C = 0: instruction executed
+L  F8D7 SS_CALL
+C  F8D7 BSR?
+C  F8DB BSR $8D -> $5F so that -$3F gives BRA $20
+L  F8DD SS_CALLJ
+C  F8DD $AD -> $6E JMP idx, $BD -> $7E JMP ext, $8D -> $20 BRA
+C  F8DF buffer opcode := the matching jump
+C  F8DF move the user frame down 2 bytes ...
+C  F8E2 ... USERFRAME follows it
+L  F8E5 SS_PUSHRET
+C  F8E5 copy 7 bytes down; the old PC slot (= next PC) stays above
+C  F8E7 the new frame as the pushed return address
+C  F8ED now treat the call as the jump it was changed into
+L  F8EF SS_JMPX
+C  F8EF A = index offset
+C  F8F1 B:A = user X + offset
+L  F8F5 SS_SKIP2
+C  F8F5 skip trick: CPX # hides $33 $32 = PULB, PULA (JMP ext enters at +1 to pull its operand)
+C  F8F8 user PC = jump target
+C  F8FC done (no instruction is run)
+L  F8FE SS_RTS
+C  F8FE frame moves up 2 bytes over the return address
+L  F903 SS_RTSCP
+C  F903 copy CC..XL up 2 (6th byte is scratch); the return address becomes the frame's PC
+C  F909 B = 6..1
+C  F90B USERFRAME already updated
+L  F90D SS_RTI
+C  F90D drop the current frame: the user's RTI frame above it becomes the registers
+C  F911 USERFRAME = frame + 7
+L  F913 SS_SWI
+C  F913 SWI ($3F) in a user program = switch to Robot Language
+C  F915 ROBOTMODE on; PC already past the SWI
+L  F918 SS_SWIX
+L  F91A OPBITMAP
+B  F91A Opcode bitmap for OPLEN: bit (7 - op&7) of byte op/8 is 1 for each of the 59 opcodes
+B  F91A the 6800 does not define (checked: identical to the emulator core's undefined set).
+B  F91A Every Robot Language opcode is in this set; that is what lets one instruction stream
+B  F91A mix native and robot instructions.
